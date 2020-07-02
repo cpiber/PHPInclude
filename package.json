@@ -16,7 +16,8 @@
     "build/",
     "src/",
     "cli.js",
-    "gulpfile.js"
+    "gulpfile.js",
+    ".babelrc"
   ],
   "author": "",
   "license": "ISC",
