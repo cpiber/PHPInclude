@@ -59,11 +59,15 @@ const argv = require('minimist')(process.argv);
     console.log('Done');
   }
 
-  const { Watch, Build } = require('./build/gulpfile');
+  const { Watch, Build, error } = require('./build/gulpfile');
 
-  if (argv.watch) {
-    Watch();
-  } else {
-    Build();
+  try {
+    if (argv.watch) {
+      Watch();
+    } else {
+      Build();
+    }
+  } catch (err) {
+    error(err);
   }
 })();

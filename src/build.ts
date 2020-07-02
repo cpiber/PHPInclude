@@ -20,7 +20,11 @@ const build = (content = undefined, file = undefined, parent = undefined) => {
   if (!fs.existsSync(config.build)) fs.mkdirSync(config.build);
   if (!file || !content) {
     file = (file && typeof file === "string") ? file : config.entry;
-    content = fs.readFileSync(file);
+    try {
+      content = fs.readFileSync(file);
+    } catch (err) {
+      throw `Entry ${file} doesn't exist`;
+    }
     file = new vinyl({ path: path.resolve(file) });
   }
   if (config.watchFile === undefined) config.watchFile = file.path;

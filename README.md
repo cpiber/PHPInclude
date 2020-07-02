@@ -2,7 +2,7 @@
 
 A tool for packaging php files into one.
 
-Resolves includes and packages files into one big file. Usefull for single-file installs.
+Resolves includes and packages files into one big file. Useful for single-file installs.
 
 
 ## Usage
@@ -17,7 +17,7 @@ Resolves includes and packages files into one big file. Usefull for single-file 
 - Destination directory: `--dest <folder>`. Default: `build`
 - Working directory: `--cd <folder>`. Default: `$PWD`
 
-## After compiling repo
+## Gulp
 
 You can also use gulp tasks instead of the CLI above. Available tasks: 'build', 'watch'.
 
@@ -28,8 +28,8 @@ This project is built using TypeScript, but compiled with Babel.
 
 Install all dependencies: `npm install`.
 
-To compile, run `npm run build_self`.
+To compile, run `npm run publish` in the root directory of this repository.
 
 To run the 'watch' gulp task without compiling, run `npm run test` in the root directory. This changes into 'src' and sets the directory to '../test' (see `--cd` above).
 
-Alternatively you can also run any task without compiling (all options available) by changing into the 'src' direcory and running `npx gulp <task> -- [options]`.
+Alternatively you can also run any task without compiling (all options available) by changing into the 'src' directory and running `npx gulp <task> -- [options]`.

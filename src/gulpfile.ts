@@ -5,14 +5,16 @@ const path = require('path'),
   transform = require('gulp-transform');
 
 const argv = require('minimist')(process.argv);
+const env = process.env.NODE_ENV || 'production';
 import builder from './build';
+
+interface fn { (): void };
 
 if (argv.cd) process.chdir(argv.cd);
 builder.config.entry = 'src/' + (argv.entry ? argv.entry : 'index.php');
 builder.config.entry = path.resolve(builder.config.entry);
 builder.config.src = path.resolve(argv.src ? argv.src : 'src');
 builder.config.build = argv.dest ? argv.dest : 'build';
-console.log(builder.config.src);
 
 const Watch = () => {
   // watch entry file, other files are added
@@ -26,7 +28,7 @@ const Watch = () => {
     builder.clean();
     builder.config.watchFile = undefined;
   });
-  // build initially
+  // build now
   builder.build();
   builder.config.watchFile = undefined;
 
@@ -38,7 +40,22 @@ const Build = () => {
   return builder.build();
 };
 
-gulp.task('watch', (cb) => { Watch(); });
-gulp.task('build', (cb) => { Build(); cb(); });
+const error = (error: string | Error) => {
+  console.error(error instanceof Error ? error.message : error);
+  if (env != 'production' && error instanceof Error) {
+    console.log('Full error:', error);
+  }
+}
+const wrap = (task: fn, cb: fn = () => {}) => {
+  try {
+    task();
+  } catch (err) {
+    error(err);
+  }
+  cb();
+}
 
-export { Watch, Build };
+gulp.task('watch', (cb: fn) => wrap(Watch) );
+gulp.task('build', (cb: fn) => wrap(Build, cb) );
+
+export { Watch, Build, error };
