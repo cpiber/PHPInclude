@@ -4,7 +4,7 @@
   "description": "Recursively resolve includes in php files",
   "main": "build/gulpfile.ts",
   "scripts": {
-    "publish": "babel src -d build --extensions .ts --copy-files",
+    "prepublish": "babel src -d build --extensions .ts --copy-files",
     "watch": "gulp watch",
     "build": "gulp build",
     "test": "cd src ; gulp watch --cd ../test"

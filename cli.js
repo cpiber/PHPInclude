@@ -51,7 +51,7 @@ const argv = require('minimist')(process.argv);
   // build if necessary
   if (!isInstalled('./build/gulpfile')) {
     console.log("Building CLI...");
-    await runCommand("npm", ["run", "build_self"])
+    await runCommand("npm", ["run", "prepublish"])
       .catch(error => {
         console.error(error);
         process.exitCode = 1;
