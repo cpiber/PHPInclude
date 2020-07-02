@@ -2,9 +2,10 @@
   "name": "phpinclude",
   "version": "1.1.1",
   "description": "Recursively resolve includes in php files",
+  "repository": "https://github.com/cpiber/PHPInclude",
   "main": "build/gulpfile.ts",
   "scripts": {
-    "prepublish": "babel src -d build --extensions .ts --copy-files",
+    "prepare": "babel src -d build --extensions .ts --copy-files",
     "watch": "gulp watch",
     "build": "gulp build",
     "test": "cd src ; gulp watch --cd ../test"

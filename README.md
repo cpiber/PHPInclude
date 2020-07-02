@@ -28,7 +28,7 @@ This project is built using TypeScript, but compiled with Babel.
 
 Install all dependencies: `npm install`.
 
-To compile, run `npm run prepublish` in the root directory of this repository.
+To compile, run `npm run prepare` in the root directory of this repository.
 
 To run the 'watch' gulp task without compiling, run `npm run test` in the root directory. This changes into 'src' and sets the directory to '../test' (see `--cd` above).
 
