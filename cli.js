@@ -1,12 +1,69 @@
 #!/usr/bin/env node
 
-require('@babel/register')({ extensions: [".ts"] });
+// STOLEN FROM WEBPACK
+
+/**
+ * @param {string} command process to run
+ * @param {string[]} args command line arguments
+ * @returns {Promise<void>} promise
+ */
+const runCommand = (command, args) => {
+  const cp = require("child_process");
+  return new Promise((resolve, reject) => {
+    const executedCommand = cp.spawn(command, args, {
+      stdio: "inherit",
+      shell: true
+    });
+
+    executedCommand.on("error", error => {
+      reject(error);
+    });
+
+    executedCommand.on("exit", code => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject();
+      }
+    });
+  });
+};
+
+/**
+ * @param {string} packageName name of the package
+ * @returns {boolean} is the package installed?
+ */
+const isInstalled = packageName => {
+  try {
+    require.resolve(packageName);
+
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+
+// END THEFT
+
 const argv = require('minimist')(process.argv);
 
-const { Watch, Build } = require('./gulpfile.ts');
+(async () => {
+  // build if necessary
+  if (!isInstalled('./build/gulpfile')) {
+    console.log("Building CLI...");
+    await runCommand("npm", ["run", "build_self"])
+      .catch(error => {
+        console.error(error);
+        process.exitCode = 1;
+      });
+    console.log('Done');
+  }
 
-if (argv.watch) {
-  Watch();
-} else {
-  Build();
-}
+  const { Watch, Build } = require('./build/gulpfile');
+
+  if (argv.watch) {
+    Watch();
+  } else {
+    Build();
+  }
+})();

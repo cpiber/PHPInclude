@@ -11,12 +11,13 @@ let config = {
   watcher: undefined,
   watchFile: undefined,
   entry: "",
-  src: "src"
+  src: "src",
+  build: "build",
 };
 
 const build = (content = undefined, file = undefined, parent = undefined) => {
   if (!config.entry) return;
-  if (!fs.existsSync('build')) fs.mkdirSync('build');
+  if (!fs.existsSync(config.build)) fs.mkdirSync(config.build);
   if (!file || !content) {
     file = (file && typeof file === "string") ? file : config.entry;
     content = fs.readFileSync(file);
@@ -53,7 +54,7 @@ const build = (content = undefined, file = undefined, parent = undefined) => {
       }));
       this.push(null);
     };
-    out.pipe(gulp.dest('build'));
+    out.pipe(gulp.dest(config.build));
   }
 
   return content;

@@ -1,5 +1,4 @@
-const fs = require('fs'),
-  path = require('path'),
+const path = require('path'),
   gulp = require('gulp'),
   webpack = require('webpack'),
   watch = require('gulp-watch'),
@@ -8,11 +7,12 @@ const fs = require('fs'),
 const argv = require('minimist')(process.argv);
 import builder from './build';
 
-
+if (argv.cd) process.chdir(argv.cd);
 builder.config.entry = (argv.entry ? argv.entry : 'src/index.php');
 builder.config.entry = path.resolve(builder.config.entry);
-
-builder.config.src = path.resolve("src");
+builder.config.src = path.resolve(argv.src ? argv.src : 'src');
+builder.config.build = argv.dest ? argv.dest : 'build';
+console.log(builder.config.src);
 
 const Watch = () => {
   // watch entry file, other files are added
@@ -38,7 +38,7 @@ const Build = () => {
   return builder.build();
 };
 
-gulp.task('watch', Watch);
-gulp.task('build', Build);
+gulp.task('watch', (cb) => { Watch(); cb(); });
+gulp.task('build', (cb) => { Build(); cb(); });
 
 export { Watch, Build };

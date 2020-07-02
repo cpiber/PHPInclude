@@ -4,6 +4,7 @@
   "description": "Recursively resolve includes in php files",
   "main": "index.js",
   "scripts": {
+    "build_self": "babel src -d build --extensions .ts --copy-files",
     "watch": "gulp watch"
   },
   "bin": {
@@ -12,8 +13,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/cli": "^7.10.4",
     "@babel/core": "^7.10.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
     "@babel/register": "^7.10.4",
@@ -28,5 +31,8 @@
     "typescript": "^3.9.6",
     "vinyl": "^2.2.0",
     "webpack": "^4.43.0"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.10.4"
   }
 }
