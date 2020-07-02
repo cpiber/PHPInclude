@@ -1,16 +1,17 @@
-const path = require('path'),
-  builder = require('../build');
-const vinyl = require('vinyl');
+const path = require('path');
+import builder from '../build';
+
+interface fileObj { path?: string; };
 
 class GenericFile {
-  file = {};
+  file: fileObj = {};
   contents = "";
   includedBy = [];
   isIncluded: undefined|string = undefined;
 
   static cache: { [key: string]: GenericFile } = {};
 
-  constructor(parent: string, file: { path: string | number; }) {
+  constructor(parent: string, file: fileObj) {
     if (parent) this.includedBy.push(parent);
     this.file = file;
     GenericFile.cache[file.path] = this;
@@ -101,4 +102,4 @@ class GenericFile {
   }
 }
 
-module.exports = GenericFile;
+export default GenericFile;

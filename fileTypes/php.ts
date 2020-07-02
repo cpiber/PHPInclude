@@ -1,4 +1,4 @@
-const GenericFile = require('./file');
+import GenericFile from './file';
 
 class PhpFile extends GenericFile {
   static openingRegex = /^\s*<\?php|\?>\s*$/g;
@@ -41,4 +41,4 @@ class PhpFile extends GenericFile {
   }
 }
 
-module.exports = PhpFile;
+export default PhpFile;

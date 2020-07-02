@@ -5,8 +5,8 @@ const fs = require('fs'),
   watch = require('gulp-watch'),
   transform = require('gulp-transform');
 
-const argv = require('minimist')(process.argv.slice(3));
-const builder = require('./build.ts');
+const argv = require('minimist')(process.argv);
+import builder from './build';
 
 
 builder.config.entry = (argv.entry ? argv.entry : 'src/index.php');
@@ -14,8 +14,9 @@ builder.config.entry = path.resolve(builder.config.entry);
 
 builder.config.src = path.resolve("src");
 
-gulp.task('watch', () => {
+const Watch = () => {
   // watch entry file, other files are added
+  console.log(`Watching ${builder.config.entry}`);
   builder.config.watcher = watch(builder.config.entry, () => {
     if (builder.config.watchFile !== builder.config.entry) {
       builder.config.watchFile = builder.config.entry;
@@ -32,8 +33,12 @@ gulp.task('watch', () => {
   // add build transform
   builder.config.watcher.pipe(transform('utf8', builder.build));
   return builder.config.watcher;
-});
-
-gulp.task('build', () => {
+};
+const Build = () => {
   return builder.build();
-});
+};
+
+gulp.task('watch', Watch);
+gulp.task('build', Build);
+
+export { Watch, Build };

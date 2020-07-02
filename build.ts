@@ -4,8 +4,8 @@ const vinyl = require('vinyl'),
   gulp = require('gulp');
 const Readable = require('stream').Readable;
 
-const GenericFile = require('./fileTypes/file'),
-  PhpFile = require('./fileTypes/php');
+import GenericFile from "./fileTypes/file";
+import PhpFile from "./fileTypes/php";
 
 let config = {
   watcher: undefined,
@@ -14,7 +14,7 @@ let config = {
   src: "src"
 };
 
-function build(content = undefined, file = undefined, parent = undefined) {
+const build = (content = undefined, file = undefined, parent = undefined) => {
   if (!config.entry) return;
   if (!fs.existsSync('build')) fs.mkdirSync('build');
   if (!file || !content) {
@@ -30,7 +30,7 @@ function build(content = undefined, file = undefined, parent = undefined) {
   const ext = path.extname(file.path);
   console.log('Building', file.path, 'with', ext);
 
-  let f: { setContent: (content: string) => string; };
+  let f: GenericFile;
   switch (ext) {
     case '.php':
       f = new PhpFile(parent, file);
@@ -58,7 +58,6 @@ function build(content = undefined, file = undefined, parent = undefined) {
 
   return content;
 }
+const clean = () => GenericFile.clean();
 
-exports.build = build;
-exports.config = config;
-exports.clean = () => GenericFile.clean();
+export default { build, config, clean };
