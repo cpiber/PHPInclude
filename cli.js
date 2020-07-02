@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-// STOLEN FROM WEBPACK
+// STOLEN FROM WEBPACK (slightly modified)
 
 /**
  * @param {string} command process to run
@@ -12,13 +12,10 @@ const runCommand = (command, args) => {
   return new Promise((resolve, reject) => {
     const executedCommand = cp.spawn(command, args, {
       stdio: "inherit",
-      shell: true
+      shell: true,
+      cwd: __dirname
     });
-
-    executedCommand.on("error", error => {
-      reject(error);
-    });
-
+    executedCommand.on("error", error => { reject(error); });
     executedCommand.on("exit", code => {
       if (code === 0) {
         resolve();
@@ -36,7 +33,6 @@ const runCommand = (command, args) => {
 const isInstalled = packageName => {
   try {
     require.resolve(packageName);
-
     return true;
   } catch (err) {
     return false;
@@ -55,12 +51,7 @@ const argv = require('minimist')(process.argv);
       .catch(error => {
         console.error(error);
         process.exitCode = 1;
-      });
-    await runCommand("npm", ["run", "prepublish"])
-      .catch(error => {
-        console.error(error);
-        process.exitCode = 1;
-      });
+      }); // install dev dependencies and triggers compilation
     console.log('Done');
   }
 
