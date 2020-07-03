@@ -50,7 +50,7 @@ const argv = require('minimist')(process.argv);
     await runCommand("npm", ["install", "--only=dev"])
       .catch(error => {
         console.error(error);
-        process.exitCode = 1;
+        process.exit();
       }); // install dev dependencies and triggers compilation
     console.log('Done');
   }

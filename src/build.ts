@@ -7,6 +7,10 @@ const Readable = require('stream').Readable;
 import GenericFile from "./fileTypes/file";
 import PhpFile from "./fileTypes/php";
 
+/**
+ * Configuration object
+ * Exported to share variables accross files
+ */
 let config = {
   watcher: undefined,
   watchFile: undefined,
@@ -15,15 +19,27 @@ let config = {
   build: "build",
 };
 
-const build = (content = undefined, file = undefined, parent = undefined) => {
+/**
+ * Build file
+ * @param {string} content file content
+ * @param {vinyl|string} file vinyl file or string (path)
+ * @param {string} parent parent file
+ * @returns {string} new content
+ */
+const build = (
+  content: string = undefined,
+  file: typeof vinyl|string = undefined,
+  parent: string = undefined
+): string => {
   if (!config.entry) return;
   if (!fs.existsSync(config.build)) fs.mkdirSync(config.build);
   if (!file || !content) {
-    file = (file && typeof file === "string") ? file : config.entry;
+    const isValid = file && typeof file === "string";
+    file = isValid ? file : config.entry;
     try {
       content = fs.readFileSync(file);
     } catch (err) {
-      throw `Entry ${file} doesn't exist`;
+      throw `${isValid ? 'File' : 'Entry'} ${file} doesn't exist`;
     }
     file = new vinyl({ path: path.resolve(file) });
   }
@@ -63,6 +79,10 @@ const build = (content = undefined, file = undefined, parent = undefined) => {
 
   return content;
 }
+/**
+ * Unwatch unneeded files and clean up
+ * Forwarded to file
+ */
 const clean = () => GenericFile.clean();
 
 export default { build, config, clean };

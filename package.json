@@ -3,12 +3,12 @@
   "version": "1.1.1",
   "description": "Recursively resolve includes in php files",
   "repository": "https://github.com/cpiber/PHPInclude",
-  "main": "build/gulpfile.ts",
+  "main": "build/gulpfile.js",
   "scripts": {
     "prepare": "babel src -d build --extensions .ts --copy-files",
     "watch": "gulp watch",
     "build": "gulp build",
-    "test": "cd src ; gulp watch --cd ../test"
+    "test": "cd src ; NODE_ENV=development gulp watch --cd ../test"
   },
   "bin": {
     "phpinclude": "./cli.js"
