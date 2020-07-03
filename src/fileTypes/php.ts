@@ -1,4 +1,5 @@
 import GenericFile from './file';
+import Factory from './factory';
 import { error } from '../gulpfile';
 
 class PhpFile extends GenericFile {
@@ -33,7 +34,7 @@ class PhpFile extends GenericFile {
       content_parts.push(content.substring(last, matches.index));
       try {
         content_parts.push(
-          GenericFile.fillContent(this.file.path, fname, include, once));
+          Factory.fillContent(this.file.path, fname, include, once));
       } catch (e) {
         error(e);
       }

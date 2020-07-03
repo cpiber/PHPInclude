@@ -5,7 +5,7 @@ const vinyl = require('vinyl'),
 const Readable = require('stream').Readable;
 
 import GenericFile from "./fileTypes/file";
-import PhpFile from "./fileTypes/php";
+import FileFactory from "./fileTypes/factory";
 
 /**
  * Configuration object
@@ -46,21 +46,12 @@ const build = (
   if (config.watchFile === undefined) config.watchFile = file.path;
   content = content.toString();
 
-  GenericFile.clearIncludes(file.path);
+  FileFactory.clearIncludes(file.path);
 
   const ext = path.extname(file.path);
   console.log('Building', file.path, 'with', ext);
 
-  let f: GenericFile;
-  switch (ext) {
-    case '.php':
-      f = new PhpFile(parent, file);
-      break;
-    default:
-      f = new GenericFile(parent, file);
-      break;
-  }
-
+  const f = FileFactory.createFile(ext, parent, file);
   content = f.setContent(content);
 
   // write combined file
@@ -81,8 +72,8 @@ const build = (
 }
 /**
  * Unwatch unneeded files and clean up
- * Forwarded to file
+ * Forwarded to Factory
  */
-const clean = () => GenericFile.clean();
+const clean = () => FileFactory.clean();
 
 export default { build, config, clean };
