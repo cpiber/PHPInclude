@@ -8,7 +8,8 @@
     "prepare": "babel src -d build --extensions .ts --copy-files",
     "watch": "gulp watch",
     "build": "gulp build",
-    "test": "cd src ; NODE_ENV=development gulp watch --cd ../test"
+    "test": "cd src ; NODE_ENV=development gulp watch --cd ../test",
+    "clean": "rm -rf build/"
   },
   "bin": {
     "phpinclude": "./cli.js"

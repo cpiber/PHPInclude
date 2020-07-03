@@ -1,5 +1,5 @@
-test
-build
+test/
+build/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/node

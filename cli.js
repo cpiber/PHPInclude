@@ -41,18 +41,40 @@ const isInstalled = packageName => {
 
 // END THEFT
 
+const readline = require('readline');
+
+/**
+ * Ask a question on stdin
+ * @param {string} query question
+ * @returns {Promise<string>} answer
+ */
+function askQuestion(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise(resolve => rl.question(query, ans => {
+    rl.close();
+    resolve(ans);
+  }));
+}
+
 const argv = require('minimist')(process.argv);
 
 (async () => {
   // build if necessary
   if (!isInstalled('./build/gulpfile')) {
-    console.log("Building CLI...");
+    console.error("Not installed!");
+    console.log("This will install dev dependencies and build the project");
+    console.log("If you do not want this, consider installing the packed version");
+    await askQuestion("Press any key to continue...");
     await runCommand("npm", ["install", "--only=dev"])
       .catch(error => {
         console.error(error);
         process.exit();
-      }); // install dev dependencies and triggers compilation
-    console.log('Done');
+      }); // install dev dependencies and trigger compilation
+    console.log("Done");
   }
 
   const { Watch, Build, error } = require('./build/gulpfile');
