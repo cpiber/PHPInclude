@@ -9,6 +9,7 @@
     "watch": "gulp watch",
     "build": "gulp build",
     "test": "cd src ; NODE_ENV=development gulp watch --cd ../test",
+    "testbuild": "cd src ; NODE_ENV=production gulp build --cd ../test",
     "clean": "rm -rf build/"
   },
   "bin": {
@@ -27,18 +28,20 @@
     "@babel/cli": "^7.10.4",
     "@babel/core": "^7.10.4",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-transform-regenerator": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.10.4",
     "@babel/preset-env": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
     "@babel/register": "^7.10.4",
     "@types/gulp": "^4.0.6",
     "@types/gulp-watch": "^4.1.34",
     "@types/vinyl": "^2.0.4",
-    "@types/webpack": "^4.41.18"
+    "@types/webpack": "^4.41.21"
   },
   "dependencies": {
     "gulp": "^4.0.2",
-    "gulp-transform": "^3.0.5",
     "gulp-watch": "^5.0.1",
+    "memfs": "^3.2.0",
     "minimist": "^1.2.5",
     "typescript": "^3.9.6",
     "vinyl": "^2.2.0",

@@ -1,12 +1,11 @@
-const path = require('path'),
-  gulp = require('gulp'),
-  webpack = require('webpack'),
-  watch = require('gulp-watch'),
-  transform = require('gulp-transform');
+import path from 'path';
+import gulp from 'gulp';
+import watch from 'gulp-watch';
 
 const argv = require('minimist')(process.argv);
 const env = process.env.NODE_ENV || 'production';
 import builder from './build';
+import FileFactory from './fileTypes/factory';
 
 interface fn { (): void };
 
@@ -23,31 +22,21 @@ builder.config.build = argv.dest ? argv.dest : 'build';
  * watcher task
  * watches entry file and all includes to rebuild
  */
-const Watch = () => {
+const Watch = async () => {
   // watch entry file, other files are added
   console.log(`Watching ${builder.config.entry}`);
-  builder.config.watcher = watch(builder.config.entry, () => {
-    if (builder.config.watchFile !== builder.config.entry) {
-      builder.config.watchFile = builder.config.entry;
-      console.log('Building entry:');
-      builder.build();
-    }
-    builder.clean();
-    builder.config.watchFile = undefined;
+  builder.config.watcher = watch(builder.config.entry, async (file) => {
+    FileFactory.dirty(file.path);
+    await builder.rebuild();
   });
   // build now
-  builder.build();
-  builder.config.watchFile = undefined;
-
-  // add build transform
-  builder.config.watcher.pipe(transform('utf8', builder.build));
-  return builder.config.watcher;
+  await builder.rebuild();
 };
 /**
  * build task
  * resolve includes once, currently no build optimisations
  */
-const Build = () => {
+const Build = async () => {
   return builder.build();
 };
 
@@ -81,6 +70,6 @@ gulp.task('watch', (cb: fn) => wrap(Watch, () => { }, () => {
   builder.config.watcher.close();
   cb();
 }) );
-gulp.task('build', (cb: fn) => wrap(Build, cb) );
+gulp.task('build', Build);
 
-export { Watch, Build, error };
+export { Watch, Build, error, env };

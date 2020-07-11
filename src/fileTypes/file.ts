@@ -1,19 +1,22 @@
+import vinyl from 'vinyl';
 import Factory from './factory';
-
-interface fileObj { path?: string; }; // reduced vinyl
+import builder from '../build';
+import { error } from '../gulpfile';
 
 class GenericFile {
-  file: fileObj = undefined;
+  file: vinyl = undefined;
   contents = "";
-  includedBy = [];
+  includedBy: string[] = [];
   isIncluded: undefined|string = undefined;
+  dirty = true;
+  isWatching = false;
 
   /**
    * File wrapper for manipulating content
-   * @param {string} parent Includer
+   * @param {string} parent includer
    * @param {vinyl} file vinyl file
    */
-  constructor(parent: string, file: fileObj) {
+  constructor(parent: string, file: vinyl) {
     if (parent) this.includedBy.push(parent); // parent is the includer
     this.file = file;
     Factory.cache[file.path] = this;
@@ -22,22 +25,23 @@ class GenericFile {
   /**
    * Set content
    * Might trigger processing depending on file (see subclasses)
-   * @param {string} content File content
+   * @param {string} content file content
    * @returns {string} content
    */
-  setContent(content: string): string {
+  async setContent(content: string): Promise<string> {
     this.contents = content;
-    return this.contents;
+    this.dirty = false;
+    return Promise.resolve(this.contents);
   }
 
   /**
    * Get content and set parent as including file
-   * @param {string} parent Includer
+   * @param {string} parent includer
    * @returns {string} content
    */
   getContent(parent: string): string {
     this.addParent(parent);
-    return this.contents;
+    return Factory.genContent(this, this.contents);
   }
 
   /**
@@ -82,6 +86,28 @@ class GenericFile {
     }
     if (this.isIncluded === parent) {
       this.isIncluded = undefined;
+    }
+  }
+
+  /**
+   * Watch file
+   * For most files default watcher
+   */
+  watch() {
+    if (builder.config.watcher && !this.isWatching) {
+      builder.config.watcher.add(this.file.path);
+      this.isWatching = true;
+    }
+  }
+
+  /**
+   * Unwatch file
+   * For most files default watcher
+   */
+  unwatch() {
+    if (builder.config.watcher && this.isWatching) {
+      builder.config.watcher.unwatch(this.file.path);
+      this.isWatching = false;
     }
   }
 }

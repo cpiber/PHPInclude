@@ -1,8 +1,10 @@
-const path = require('path');
+import path from 'path';
 import builder from '../build';
+import { error, env } from '../gulpfile';
 
 import GenericFile from "./file";
 import PhpFile from "./php";
+import JsFile from "./js";
 
 class Factory {
   // Cache for keeping track of files (maps filename to file object)
@@ -16,10 +18,14 @@ class Factory {
    * @returns {GenericFile} file
    */
   static createFile (ext: string, parent: string, file): GenericFile {
+    if (Factory.cache[file.path]) return Factory.cache[file.path];
     let f: GenericFile;
     switch (ext) {
       case '.php':
         f = new PhpFile(parent, file);
+        break;
+      case '.js':
+        f = new JsFile(parent, file);
         break;
       default:
         f = new GenericFile(parent, file);
@@ -37,50 +43,70 @@ class Factory {
    * @param {boolean} once _once?
    * @returns {string} content
    */
-  static fillContent(
+  static async fillContent(
     parent: string, filename: string,
     include: boolean, once: boolean
-  ): string {
+  ): Promise<string> {
     // filename relative to includer
-    let file = path.join(path.dirname(parent), filename);
+    const file = path.join(path.dirname(parent), filename);
 
     // create file & build
-    if (Factory.cache[file] === undefined) {
-      Factory.cache[file] = null;
+    if (!Factory.cache[file] || Factory.cache[file].dirty) {
       try {
-        builder.build(undefined, file, parent);
-        if (builder.config.watcher) builder.config.watcher.add(file);
+        await builder.build(undefined, file, parent);
+        Factory.cache[file].watch();
       } catch (e) {
       }
     }
+
+    const f = Factory.cache[file];
     // file doesn't exist
-    if (Factory.cache[file] === null) {
+    if (!f) {
       if (include) {
-        return "";
+        return Promise.resolve(Factory.genContent(f));;
       } else {
-        throw `Could not open ${file}`;
+        return Promise.reject(`Could not open ${file}`);
       }
     }
     // handle _once
-    if (once && Factory.cache[file].alreadyIncluded()) {
-      Factory.cache[file].addParent(parent);
-      return "";
+    if (once && f.alreadyIncluded()) {
+      f.addParent(parent);
+      return Promise.resolve(Factory.genContent(f));
     } else {
-      return Factory.cache[file].getContent(parent);
+      return Promise.resolve(f.getContent(parent));
+    }
+  }
+
+  static genContent(file: GenericFile, content: string = ""): string {
+    if (env === 'production') return content;
+    return `// BEGIN ${file.file.path}\n${content}\n// END ${file.file.path}`;
+  }
+
+  /**
+   * Remove files were included by param (regenerate content)
+   * @param filename file path
+   */
+  static clearIncludes(filename: string) {
+    for (const fname in Factory.cache) {
+      const f = Factory.cache[fname];
+      if (f && f.wasIncludedBy(filename)) {
+        f.removeInclude(filename);
+        // if (!f.includedBy.length) Factory.clearIncludes(fname);
+      }
     }
   }
 
   /**
-   * Recursively remove param files that included it (regenerate content)
+   * Recursively make dirty (regenerate content)
    * @param filename file path
    */
-  static clearIncludes(filename: string) {
-    for (let fname in Factory.cache) {
-      let f = Factory.cache[fname];
-      if (f && f.wasIncludedBy(filename)) {
-        f.removeInclude(filename);
-        Factory.clearIncludes(fname);
-      }
+  static dirty(filename: string) {
+    const f = Factory.cache[filename];
+    if (!f) return;
+    f.dirty = true;
+
+    for (const fname of f.includedBy) {
+      Factory.dirty(fname);
     }
   }
 
@@ -88,11 +114,11 @@ class Factory {
    * Unwatch loose files and remove cache objects
    */
   static clean() {
-    for (let fname in Factory.cache) {
-      let f = Factory.cache[fname];
+    for (const fname in Factory.cache) {
+      const f = Factory.cache[fname];
       if (f && !f.alreadyIncluded() && fname !== builder.config.entry) {
+        Factory.cache[fname].unwatch();
         delete Factory.cache[fname];
-        if (builder.config.watcher) builder.config.watcher.unwatch(fname);
       }
     }
   }

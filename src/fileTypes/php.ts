@@ -1,9 +1,10 @@
 import GenericFile from './file';
 import Factory from './factory';
-import { error } from '../gulpfile';
+import { error, env } from '../gulpfile';
 
 class PhpFile extends GenericFile {
-  static openingRegex = /^\s*<\?php|\?>\s*$/g;
+  static openingRegex = /^\s*<\?php/g;
+  static closingRegex = /\?>\s*$/g;
 
   constructor(parent: string, file: any) {
     super(parent, file);
@@ -15,7 +16,7 @@ class PhpFile extends GenericFile {
    * @param {string} content file content
    * @returns {string} content
    */
-  setContent(content: string): string {
+  async setContent(content: string): Promise<string> {
     let matches: RegExpExecArray,
       content_parts: string[] = [],
       last = 0;
@@ -28,13 +29,14 @@ class PhpFile extends GenericFile {
       const include = matches[1] === "include",
         once = matches[2] !== undefined,
         fname = matches[3] || matches[4];
-      //console.log(include, once, fname);
+      // console.log(include, once, fname);
 
       // save string until include + file contents (recursive build)
       content_parts.push(content.substring(last, matches.index));
       try {
-        content_parts.push(
-          Factory.fillContent(this.file.path, fname, include, once));
+        const fcontent =
+          await Factory.fillContent(this.file.path, fname, include, once);
+        content_parts.push(fcontent);
       } catch (e) {
         error(e);
       }
@@ -44,7 +46,8 @@ class PhpFile extends GenericFile {
     content_parts.push(content.substring(last, content.length));
 
     this.contents = content_parts.join("");
-    return this.contents;
+    this.dirty = false;
+    return Promise.resolve(this.contents);
   }
 
   /**
@@ -55,7 +58,20 @@ class PhpFile extends GenericFile {
    */
   getContent(parent: string): string {
     this.addParent(parent);
-    return this.contents.replace(PhpFile.openingRegex, '');
+    let content = this.contents;
+    // if begins with <?php, remove it, else add ?>
+    if (PhpFile.openingRegex.test(content)) {
+      content = content.replace(PhpFile.openingRegex, '');
+    } else {
+      content = `?>\n${content}`;
+    }
+    // if ends with ?>, remove it, else add <?php
+    if (PhpFile.closingRegex.test(content)) {
+      content = content.replace(PhpFile.closingRegex, '');
+    } else {
+      content = `${content}\n<?php`;
+    }
+    return Factory.genContent(this, content);
   }
 }
 

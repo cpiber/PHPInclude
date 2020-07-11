@@ -1,10 +1,9 @@
-const fs = require('fs'),
-  path = require('path');
-const vinyl = require('vinyl'),
-  gulp = require('gulp');
-const Readable = require('stream').Readable;
+import fs from 'fs';
+import path from 'path';
+import vinyl from 'vinyl';
+import gulp from 'gulp';
+import { Readable } from 'stream';
 
-import GenericFile from "./fileTypes/file";
 import FileFactory from "./fileTypes/factory";
 
 /**
@@ -26,25 +25,28 @@ let config = {
  * @param {string} parent parent file
  * @returns {string} new content
  */
-const build = (
+const build = async (
   content: string = undefined,
-  file: typeof vinyl|string = undefined,
+  filename: vinyl|string = undefined,
   parent: string = undefined
-): string => {
+): Promise<string> => {
   if (!config.entry) return;
   if (!fs.existsSync(config.build)) fs.mkdirSync(config.build);
-  if (!file || !content) {
-    const isValid = file && typeof file === "string";
-    file = isValid ? file : config.entry;
+  
+  let file: vinyl;
+  const isFilename = filename && typeof filename === "string";
+  if (isFilename || !content) {
+    filename = isFilename ? filename : config.entry;
     try {
-      content = fs.readFileSync(file);
+      content = fs.readFileSync(filename as string).toString();
     } catch (err) {
-      throw `${isValid ? 'File' : 'Entry'} ${file} doesn't exist`;
+      throw `${isFilename ? 'File' : 'Entry'} ${filename} doesn't exist`;
     }
-    file = new vinyl({ path: path.resolve(file) });
+    file = new vinyl({ path: path.resolve(filename as string) });
+  } else {
+    file = filename as vinyl;
   }
   if (config.watchFile === undefined) config.watchFile = file.path;
-  content = content.toString();
 
   FileFactory.clearIncludes(file.path);
 
@@ -52,23 +54,40 @@ const build = (
   console.log('Building', file.path, 'with', ext);
 
   const f = FileFactory.createFile(ext, parent, file);
-  content = f.setContent(content);
+  content = await f.setContent(content);
 
   // write combined file
   if (file.path === config.entry && config.watchFile === config.entry) {
-    let out = new Readable({ objectMode: true });
-    out._read = function () {
-      this.push(new vinyl({
-        cwd: config.src,
-        path: file.path,
-        contents: Buffer.from(content)
-      }));
-      this.push(null);
-    };
-    out.pipe(gulp.dest(config.build));
+    return new Promise<string>((resolve, reject) => {
+      let out = new Readable({ objectMode: true });
+      out._read = function () {
+        this.push(new vinyl({
+          cwd: config.src,
+          path: file.path,
+          contents: Buffer.from(content)
+        }));
+        this.push(null);
+      };
+      out.pipe(gulp.dest(config.build));
+      out.on('end', () => resolve(content));
+      out.on('error', reject);
+    });
   }
 
-  return content;
+  return Promise.resolve(content);
+}
+/**
+ * Rebuild
+ * Used by watcher
+ */
+const rebuild = async () => {
+  if (config.watchFile !== config.entry) {
+    config.watchFile = config.entry;
+    console.log('Building entry:');
+    await build();
+  }
+  clean();
+  config.watchFile = undefined;
 }
 /**
  * Unwatch unneeded files and clean up
@@ -76,4 +95,4 @@ const build = (
  */
 const clean = () => FileFactory.clean();
 
-export default { build, config, clean };
+export default { build, clean, rebuild, config };
