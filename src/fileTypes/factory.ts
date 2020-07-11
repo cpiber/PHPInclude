@@ -56,6 +56,7 @@ class Factory {
         await builder.build(undefined, file, parent);
         Factory.cache[file].watch();
       } catch (e) {
+        error(e);
       }
     }
 

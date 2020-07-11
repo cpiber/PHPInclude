@@ -37,7 +37,7 @@ const Watch = async () => {
  * resolve includes once, currently no build optimisations
  */
 const Build = async () => {
-  return builder.build();
+  return builder.build().catch((err) => error(err));
 };
 
 /**

@@ -45,9 +45,13 @@ class JsFile extends GenericFile {
     // should only be called once (on include)
     if (builder.config.watcher) return super.setContent(content);
     // else compile using webpack
-    const c = await this.build();
-    this.contents = c;
-    return Promise.resolve(this.contents);
+    try {
+      const c = await this.build();
+      this.contents = c;
+      return Promise.resolve(this.contents);
+    } catch (err) {
+      return Promise.reject(err);
+    }
   }
 
   /**

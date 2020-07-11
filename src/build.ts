@@ -4,7 +4,8 @@ import vinyl from 'vinyl';
 import gulp from 'gulp';
 import { Readable } from 'stream';
 
-import FileFactory from "./fileTypes/factory";
+import FileFactory from './fileTypes/factory';
+import { error } from './gulpfile';
 
 /**
  * Configuration object
@@ -40,7 +41,8 @@ const build = async (
     try {
       content = fs.readFileSync(filename as string).toString();
     } catch (err) {
-      throw `${isFilename ? 'File' : 'Entry'} ${filename} doesn't exist`;
+      return Promise.reject(
+        `${isFilename ? 'File' : 'Entry'} ${filename} doesn't exist`);
     }
     file = new vinyl({ path: path.resolve(filename as string) });
   } else {
@@ -84,7 +86,11 @@ const rebuild = async () => {
   if (config.watchFile !== config.entry) {
     config.watchFile = config.entry;
     console.log('Building entry:');
-    await build();
+    try {
+      await build();
+    } catch (err) {
+      error(err);
+    }
   }
   clean();
   config.watchFile = undefined;
