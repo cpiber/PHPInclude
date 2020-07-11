@@ -7,8 +7,6 @@ const env = process.env.NODE_ENV || 'production';
 import builder from './build';
 import FileFactory from './fileTypes/factory';
 
-interface fn { (): void };
-
 // configure
 // set variables based on arguments
 if (argv.cd) process.chdir(argv.cd);
@@ -23,14 +21,26 @@ builder.config.build = argv.dest ? argv.dest : 'build';
  * watches entry file and all includes to rebuild
  */
 const Watch = async () => {
-  // watch entry file, other files are added
-  console.log(`Watching ${builder.config.entry}`);
-  builder.config.watcher = watch(builder.config.entry, async (file) => {
-    FileFactory.dirty(file.path);
-    await builder.rebuild();
+  return new Promise<void>(async (resolve, reject) => {
+    const build = async () => {
+      try {
+        await builder.rebuild();
+      } catch (err) {
+        error(err);
+        builder.config.watcher.close();
+        resolve();
+      }
+    }
+
+    // watch entry file, other files are added
+    console.log(`Watching ${builder.config.entry}`);
+    builder.config.watcher = watch(builder.config.entry, async (file) => {
+      FileFactory.dirty(file.path);
+      await build();
+    });
+    // first build
+    await build();
   });
-  // build now
-  await builder.rebuild();
 };
 /**
  * build task
@@ -45,31 +55,14 @@ const Build = async () => {
  * @param {string | Error} error to print
  */
 const error = (error: string | Error) => {
-  console.error(error instanceof Error ? error.message : error);
+  console.error(`== ERROR ==
+    ${error instanceof Error ? error.message : error}`);
   if (env != 'production' && error instanceof Error) {
     console.log('Full error:', error);
   }
 }
-/**
- * helper to wrap gulp tasks in error-catcher and call callback
- * @param {(): void} task task function
- * @param {(): void} cb callback (gulp), optional
- * @param {(): void} err error callback, optional
- */
-const wrap = (task: fn, cb: fn = () => { }, err: fn = () => { }) => {
-  try {
-    task();
-  } catch (e) {
-    error(e);
-    err();
-  }
-  cb();
-}
 
-gulp.task('watch', (cb: fn) => wrap(Watch, () => { }, () => {
-  builder.config.watcher.close();
-  cb();
-}) );
+gulp.task('watch', Watch);
 gulp.task('build', Build);
 
 export { Watch, Build, error, env };

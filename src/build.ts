@@ -86,11 +86,7 @@ const rebuild = async () => {
   if (config.watchFile !== config.entry) {
     config.watchFile = config.entry;
     console.log('Building entry:');
-    try {
-      await build();
-    } catch (err) {
-      error(err);
-    }
+    await build();
   }
   clean();
   config.watchFile = undefined;
