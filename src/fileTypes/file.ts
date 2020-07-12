@@ -1,7 +1,7 @@
 import vinyl from 'vinyl';
 import Factory from './factory';
 import builder from '../build';
-import { error } from '../gulpfile';
+import { error, env } from '../gulpfile';
 
 class GenericFile {
   file: vinyl = undefined;
@@ -41,7 +41,18 @@ class GenericFile {
    */
   getContent(parent: string): string {
     this.addParent(parent);
-    return Factory.genContent(this, this.contents);
+    return this.genContent(this.contents);
+  }
+
+  /**
+   * Generate content
+   * Adds surrounding comments in dev mode
+   * @param {string} content
+   * @returns {string} content
+   */
+  genContent(content: string = ""): string {
+    if (env === 'production') return content;
+    return `// BEGIN ${this.file.path}\n${content}\n// END ${this.file.path}`;
   }
 
   /**

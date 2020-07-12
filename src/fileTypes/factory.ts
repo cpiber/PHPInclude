@@ -64,7 +64,7 @@ class Factory {
     // file doesn't exist
     if (!f) {
       if (include) {
-        return Promise.resolve(Factory.genContent(f));;
+        return Promise.resolve(f.genContent());;
       } else {
         return Promise.reject(`Could not open ${file}`);
       }
@@ -72,15 +72,10 @@ class Factory {
     // handle _once
     if (once && f.alreadyIncluded()) {
       f.addParent(parent);
-      return Promise.resolve(Factory.genContent(f));
+      return Promise.resolve(f.genContent());
     } else {
       return Promise.resolve(f.getContent(parent));
     }
-  }
-
-  static genContent(file: GenericFile, content: string = ""): string {
-    if (env === 'production') return content;
-    return `// BEGIN ${file.file.path}\n${content}\n// END ${file.file.path}`;
   }
 
   /**

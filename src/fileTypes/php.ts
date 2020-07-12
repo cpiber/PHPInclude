@@ -71,7 +71,7 @@ class PhpFile extends GenericFile {
     } else {
       content = `${content}\n<?php`;
     }
-    return Factory.genContent(this, content);
+    return this.genContent(content);
   }
 }
 
