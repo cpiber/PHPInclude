@@ -92,7 +92,8 @@ class Factory {
       const f = Factory.cache[fname];
       if (f && f.wasIncludedBy(filename)) {
         f.removeInclude(filename);
-        // if (!f.includedBy.length) Factory.clearIncludes(fname);
+        // dangling file, will be deleted when cleaning
+        if (!f.includedBy.length) Factory.clearIncludes(fname);
       }
     }
   }

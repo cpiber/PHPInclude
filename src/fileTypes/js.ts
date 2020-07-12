@@ -26,7 +26,7 @@ class JsFile extends GenericFile {
       entry: file.path,
       output: {
         path: file.path,
-        filename: 'f.js'
+        filename: 'file'
       },
       mode: builder.config.watcher ? 'development' : 'production',
       performance: { hints: false } // disable build info
@@ -67,7 +67,7 @@ class JsFile extends GenericFile {
         const ret = this.buildCB(err, stats);
         if (ret !== "") return error(ret);
         try {
-          const content = fs.readFileSync(`${this.file.path}/f.js`).toString();
+          const content = fs.readFileSync(`${this.file.path}/file`).toString();
           await this.update(content);
         } catch (err) {
           error(err);
@@ -91,11 +91,11 @@ class JsFile extends GenericFile {
   /**
    * Webpack errorhandling callback (watch/run)
    */
-  buildCB(err, stats): string {
+  buildCB(err: Error|string, stats: webpack.Stats): string {
     // error handling
     if (err) {
-      error(err.stack || err);
-      return err.stack || err;
+      error((err as Error).stack || err as string);
+      return (err as Error).stack || err as string;
     }
     const info = stats.toString();
     if (stats.hasErrors()) {
@@ -114,7 +114,8 @@ class JsFile extends GenericFile {
    * @param {string} content new content
    */
   async update(content: string) {
-    await super.setContent(content);
+    Factory.dirty(this.file.path); // make all that include this dirty
+    await super.setContent(content); // sets self 'clean'
     await builder.rebuild();
   }
 
@@ -127,7 +128,7 @@ class JsFile extends GenericFile {
         const ret = this.buildCB(err, stats);
         if (ret !== "") return reject(ret);
         try {
-          resolve(fs.readFileSync(`${this.file.path}/f.js`).toString());
+          resolve(fs.readFileSync(`${this.file.path}/file`).toString());
         } catch (err) {
           error(err);
           reject(err);

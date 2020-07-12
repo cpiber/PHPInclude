@@ -13,7 +13,6 @@ import { error } from './gulpfile';
  */
 let config = {
   watcher: undefined,
-  watchFile: undefined,
   entry: "",
   src: "src",
   build: "build",
@@ -48,7 +47,6 @@ const build = async (
   } else {
     file = filename as vinyl;
   }
-  if (config.watchFile === undefined) config.watchFile = file.path;
 
   FileFactory.clearIncludes(file.path);
 
@@ -56,40 +54,32 @@ const build = async (
   console.log('Building', file.path, 'with', ext);
 
   const f = FileFactory.createFile(ext, parent, file);
-  content = await f.setContent(content);
-
-  // write combined file
-  if (file.path === config.entry && config.watchFile === config.entry) {
-    return new Promise<string>((resolve, reject) => {
-      let out = new Readable({ objectMode: true });
-      out._read = function () {
-        this.push(new vinyl({
-          cwd: config.src,
-          path: file.path,
-          contents: Buffer.from(content)
-        }));
-        this.push(null);
-      };
-      out.pipe(gulp.dest(config.build));
-      out.on('end', () => resolve(content));
-      out.on('error', reject);
-    });
-  }
-
-  return Promise.resolve(content);
+  return f.setContent(content);
 }
 /**
  * Rebuild
  * Used by watcher
  */
 const rebuild = async () => {
-  if (config.watchFile !== config.entry) {
-    config.watchFile = config.entry;
-    console.log('Building entry:');
-    await build();
-  }
-  clean();
-  config.watchFile = undefined;
+  console.log('Building entry:');
+  const content = await build();
+
+  const p = new Promise<string>((resolve, reject) => {
+    let out = new Readable({ objectMode: true });
+    out._read = function () {
+      this.push(new vinyl({
+        cwd: config.src,
+        path: config.entry,
+        contents: Buffer.from(content)
+      }));
+      this.push(null);
+    };
+    out.pipe(gulp.dest(config.build));
+    out.on('end', () => resolve(content));
+    out.on('error', reject);
+  });
+  p.then(clean, clean); // doesn't modify original promise (doesn't catch!)
+  return p;
 }
 /**
  * Unwatch unneeded files and clean up

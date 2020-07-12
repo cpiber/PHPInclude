@@ -21,18 +21,18 @@ builder.config.build = argv.dest ? argv.dest : 'build';
  * watches entry file and all includes to rebuild
  */
 const Watch = async () => {
-  return new Promise<void>(async (resolve, reject) => {
+  return new Promise<void>(async (resolve, _) => {
     const build = async () => {
       try {
         await builder.rebuild();
       } catch (err) {
         error(err);
-        builder.config.watcher.close();
+        close();
         resolve();
       }
     }
 
-    // watch entry file, other files are added
+    // watch entry file, other files are added when needed
     console.log(`Watching ${builder.config.entry}`);
     builder.config.watcher = watch(builder.config.entry, async (file) => {
       FileFactory.dirty(file.path);
@@ -59,6 +59,16 @@ const error = (error: string | Error) => {
     ${error instanceof Error ? error.message : error}`);
   if (env != 'production' && error instanceof Error) {
     console.log('Full error:', error);
+  }
+}
+
+/**
+ * Close all watchers
+ */
+const close = () => {
+  builder.config.watcher.close();
+  for (const fname in FileFactory.cache) {
+    FileFactory.cache[fname].unwatch();
   }
 }
 
