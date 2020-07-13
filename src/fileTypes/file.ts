@@ -1,13 +1,14 @@
 import vinyl from 'vinyl';
+
 import Factory from './factory';
 import builder from '../build';
-import { error, env } from '../gulpfile';
+import { env } from '../gulpfile';
 
 class GenericFile {
   file: vinyl = undefined;
   contents = "";
   includedBy: string[] = [];
-  isIncluded: undefined|string = undefined;
+  isIncluded: string = undefined;
   dirty = true;
   isWatching = false;
 
