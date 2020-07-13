@@ -5,12 +5,8 @@ import { argv } from './global';
 import { error } from './helpers';
 import Builder from './build';
 
-const builder = new Builder();
+const builder = new Builder(argv);
 let watcher;
-
-// configure
-// set variables based on arguments
-builder.configure(argv);
 
 /**
  * watcher task
@@ -27,6 +23,10 @@ const Watch = async () => {
         resolve();
       }
     }
+    process.on('SIGINT', () => {
+      close();
+      resolve();
+    });
 
     // watch entry file, other files are added when needed
     console.log(`Watching ${builder.entry}`);

@@ -3,6 +3,7 @@ import path from 'path';
 import webpack from 'webpack';
 
 import GenericFile from './file';
+import { env } from '../global';
 import { error } from '../helpers';
 
 let fs;
@@ -22,8 +23,7 @@ class WebpackFile extends GenericFile {
    */
   constructor(parent: string, file: any, config = undefined) {
     super(parent, file);
-    this.defaultConfig.mode =
-      this.builder.watchMode ? 'development' : 'production';
+    this.defaultConfig.mode = env;
     this.updateConfig(config);
     this.compiler = webpack(this.config);
     this.compiler.outputFileSystem = fs;

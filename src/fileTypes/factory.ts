@@ -12,7 +12,7 @@ class Factory {
   cache: { [key: string]: GenericFile } = {};
   builder: Builder = undefined;
 
-  constructor(builder) {
+  constructor(builder: Builder) {
     this.builder = builder;
   }
 

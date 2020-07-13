@@ -14,15 +14,16 @@ class Builder {
   build_dir = "build";
   factory: FileFactory;
 
-  constructor() {
+  constructor(args: any) {
     this.factory = new FileFactory(this);
+    this.configure(args);
   }
 
   /**
    * Minimal configuration
    * @param args config
    */
-  configure(args) {
+  configure(args: any) {
     if (args.cd) process.chdir(args.cd);
     this.entry = (args.src ? args.src : 'src') + '/'
       + (args.entry ? args.entry : 'index.php');
@@ -60,15 +61,14 @@ class Builder {
     } else {
       file = filename as vinyl;
     }
-    const isEntry = file.path === this.entry;
-
+    
     this.factory.clearIncludes(file.path);
-
+    
     const ext = path.extname(file.path);
     console.log('Building', file.path, 'with', ext);
 
     const f = this.factory.createFile(ext, parent, file);
-    f.persistent = isEntry;
+    f.persistent = file.path === this.entry;
     return f.setContent(content);
   }
 
@@ -80,12 +80,13 @@ class Builder {
     console.log('Building entry:');
     const content = await this.build();
 
-    const p = new Promise<string>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       let out = new Readable({ objectMode: true });
+      const builder = this;
       out._read = function () {
         this.push(new vinyl({
-          cwd: this.src_dir,
-          path: this.entry,
+          cwd: builder.src_dir,
+          path: builder.entry,
           contents: Buffer.from(content)
         }));
         this.push(null);
@@ -93,9 +94,10 @@ class Builder {
       out.pipe(gulp.dest(this.build_dir));
       out.on('end', () => resolve(content));
       out.on('error', reject);
-    });
-    p.then(this.clean, this.clean); // doesn't modify original promise (doesn't catch!)
-    return p;
+    }).then(
+      (value)  => { this.clean(); return Promise.resolve(value); },
+      (reason) => { this.clean(); return Promise.reject(reason); }
+    ); // add clean step without modifying promise content
   }
 
   /**
