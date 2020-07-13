@@ -19,7 +19,7 @@ class GenericFile {
    * @param {vinyl} file vinyl file
    */
   constructor(parent: string, file: vinyl) {
-    if (parent) this.includedBy.push(parent); // parent is the includer
+    if (parent) this.addParent(parent); // parent is the includer
     this.file = file;
   }
 
