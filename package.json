@@ -1,6 +1,6 @@
 {
   "name": "phpinclude",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Recursively resolve includes in php files",
   "repository": "https://github.com/cpiber/PHPInclude",
   "main": "build/gulpfile.js",
