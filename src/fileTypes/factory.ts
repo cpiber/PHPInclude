@@ -1,14 +1,20 @@
 import path from 'path';
-import builder from '../build';
-import { error, env } from '../gulpfile';
 
-import GenericFile from "./file";
-import PhpFile from "./php";
-import JsFile from "./js";
+import Builder from '../build';
+import { error } from '../helpers';
+
+import GenericFile from './file';
+import PhpFile from './php';
+import JsFile from './js';
 
 class Factory {
   // Cache for keeping track of files (maps filename to file object)
-  static cache: { [key: string]: GenericFile } = {};
+  cache: { [key: string]: GenericFile } = {};
+  builder: Builder = undefined;
+
+  constructor(builder) {
+    this.builder = builder;
+  }
 
   /**
    * Create file based on extension (factory)
@@ -17,8 +23,8 @@ class Factory {
    * @param {vinyl} file vinyl file
    * @returns {GenericFile} file
    */
-  static createFile (ext: string, parent: string, file): GenericFile {
-    if (Factory.cache[file.path]) return Factory.cache[file.path];
+  createFile(ext: string, parent: string, file): GenericFile {
+    if (this.cache[file.path]) return this.cache[file.path];
     let f: GenericFile;
     switch (ext) {
       case '.php':
@@ -31,6 +37,8 @@ class Factory {
         f = new GenericFile(parent, file);
         break;
     }
+    f.builder = this.builder;
+    this.cache[file.path] = f;
     return f;
   }
 
@@ -43,7 +51,7 @@ class Factory {
    * @param {boolean} once _once?
    * @returns {string} content
    */
-  static async fillContent(
+  async fillContent(
     parent: string, filename: string,
     include: boolean, once: boolean
   ): Promise<string> {
@@ -51,16 +59,16 @@ class Factory {
     const file = path.join(path.dirname(parent), filename);
 
     // create file & build
-    if (!Factory.cache[file] || Factory.cache[file].dirty) {
+    if (!this.cache[file] || this.cache[file].dirty) {
       try {
-        await builder.build(undefined, file, parent);
-        Factory.cache[file].watch();
+        await this.builder.build(undefined, file, parent);
+        if (this.builder.watchMode) this.cache[file].watch();
       } catch (e) {
         error(e);
       }
     }
 
-    const f = Factory.cache[file];
+    const f = this.cache[file];
     // file doesn't exist
     if (!f) {
       if (include) {
@@ -82,13 +90,13 @@ class Factory {
    * Remove files were included by param (regenerate content)
    * @param filename file path
    */
-  static clearIncludes(filename: string) {
-    for (const fname in Factory.cache) {
-      const f = Factory.cache[fname];
+  clearIncludes(filename: string) {
+    for (const fname in this.cache) {
+      const f = this.cache[fname];
       if (f && f.wasIncludedBy(filename)) {
         f.removeInclude(filename);
         // dangling file, will be deleted when cleaning
-        if (!f.includedBy.length) Factory.clearIncludes(fname);
+        if (!f.includedBy.length) this.clearIncludes(fname);
       }
     }
   }
@@ -97,25 +105,25 @@ class Factory {
    * Recursively make dirty (regenerate content)
    * @param filename file path
    */
-  static dirty(filename: string) {
-    const f = Factory.cache[filename];
+  dirty(filename: string) {
+    const f = this.cache[filename];
     if (!f) return;
     f.dirty = true;
 
     for (const fname of f.includedBy) {
-      Factory.dirty(fname);
+      this.dirty(fname);
     }
   }
 
   /**
    * Unwatch loose files and remove cache objects
    */
-  static clean() {
-    for (const fname in Factory.cache) {
-      const f = Factory.cache[fname];
-      if (f && !f.alreadyIncluded() && fname !== builder.config.entry) {
-        Factory.cache[fname].unwatch();
-        delete Factory.cache[fname];
+  clean() {
+    for (const fname in this.cache) {
+      const f = this.cache[fname];
+      if (f && !f.alreadyIncluded() && !f.persistent) {
+        if (this.builder.watchMode) this.cache[fname].unwatch();
+        delete this.cache[fname];
       }
     }
   }

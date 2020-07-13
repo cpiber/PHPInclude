@@ -3,9 +3,7 @@ import path from 'path';
 import webpack from 'webpack';
 
 import GenericFile from './file';
-import Factory from './factory';
-import { error } from '../gulpfile';
-import builder from '../build';
+import { error } from '../helpers';
 
 let fs;
 fs = createFsFromVolume(new Volume());
@@ -14,8 +12,8 @@ fs.join = path.join.bind(path);
 class WebpackFile extends GenericFile {
   compiler: webpack.Compiler;
   watching: webpack.Compiler.Watching;
-  config;
-  static defaultConfig = {};
+  config: any;
+  defaultConfig: any = {};
 
   /**
    * File wrapper for javascript files, compiled using webpack
@@ -24,6 +22,8 @@ class WebpackFile extends GenericFile {
    */
   constructor(parent: string, file: any, config = undefined) {
     super(parent, file);
+    this.defaultConfig.mode =
+      this.builder.watchMode ? 'development' : 'production';
     this.updateConfig(config);
     this.compiler = webpack(this.config);
     this.compiler.outputFileSystem = fs;
@@ -38,7 +38,7 @@ class WebpackFile extends GenericFile {
   async setContent(content: string): Promise<string> {
     // is a watcher is in place, webpack will rebuild automatically
     // should only be called once (on include)
-    if (builder.config.watcher) return super.setContent(content);
+    if (this.builder.watchMode) return super.setContent(content);
     // else compile using webpack
     try {
       const c = await this.build();
@@ -55,7 +55,7 @@ class WebpackFile extends GenericFile {
    */
   watch() {
     // check if in watch mode
-    if (builder.config.watcher && !this.isWatching) {
+    if (!this.isWatching) {
       this.watching = this.compiler.watch({
         aggregateTimeout: 300
       }, async (err, stats) => {
@@ -77,7 +77,7 @@ class WebpackFile extends GenericFile {
    * For most files default watcher
    */
   unwatch() {
-    if (builder.config.watcher && this.isWatching) {
+    if (this.isWatching) {
       this.watching.close(() => {});
       this.isWatching = false;
     }
@@ -88,7 +88,7 @@ class WebpackFile extends GenericFile {
    * @param config provided config object
    */
   updateConfig(config) {
-    this.config = Object.assign({}, WebpackFile.defaultConfig, config, {
+    this.config = Object.assign({}, this.defaultConfig, config, {
       entry: this.file.path,
       performance: {  hints: false } // disable build info
     });
@@ -120,9 +120,9 @@ class WebpackFile extends GenericFile {
    * @param {string} content new content
    */
   async update(content: string) {
-    Factory.dirty(this.file.path); // make all that include this dirty
+    this.builder.factory.dirty(this.file.path); // make all that include dirty
     await super.setContent(content); // sets self 'clean'
-    await builder.rebuild();
+    await this.builder.rebuild();
   }
 
   /**

@@ -1,6 +1,5 @@
 import GenericFile from './file';
-import Factory from './factory';
-import { error, env } from '../gulpfile';
+import { error } from '../helpers';
 
 class PhpFile extends GenericFile {
   static openingRegex = /^\s*<\?php/g;
@@ -34,8 +33,8 @@ class PhpFile extends GenericFile {
       // save string until include + file contents (recursive build)
       content_parts.push(content.substring(last, matches.index));
       try {
-        const fcontent =
-          await Factory.fillContent(this.file.path, fname, include, once);
+        const fcontent = await this.builder.factory.fillContent(
+          this.file.path, fname, include, once);
         content_parts.push(fcontent);
       } catch (e) {
         error(e);

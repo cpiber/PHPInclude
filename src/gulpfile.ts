@@ -1,20 +1,16 @@
-import path from 'path';
 import gulp from 'gulp';
 import watch from 'gulp-watch';
 
-const argv = require('minimist')(process.argv);
-const env = process.env.NODE_ENV || 'production';
-import builder from './build';
-import FileFactory from './fileTypes/factory';
+import { argv } from './global';
+import { error } from './helpers';
+import Builder from './build';
+
+const builder = new Builder();
+let watcher;
 
 // configure
 // set variables based on arguments
-if (argv.cd) process.chdir(argv.cd);
-builder.config.entry = (argv.src ? argv.src : 'src') + '/'
-  + (argv.entry ? argv.entry : 'index.php');
-builder.config.entry = path.resolve(builder.config.entry);
-builder.config.src = path.resolve(argv.src ? argv.src : 'src');
-builder.config.build = argv.dest ? argv.dest : 'build';
+builder.configure(argv);
 
 /**
  * watcher task
@@ -33,9 +29,9 @@ const Watch = async () => {
     }
 
     // watch entry file, other files are added when needed
-    console.log(`Watching ${builder.config.entry}`);
-    builder.config.watcher = watch(builder.config.entry, async (file) => {
-      FileFactory.dirty(file.path);
+    console.log(`Watching ${builder.entry}`);
+    builder.watcher = watcher = watch(builder.entry, async (file) => {
+      builder.factory.dirty(file.path);
       await build();
     });
     // first build
@@ -51,28 +47,14 @@ const Build = async () => {
 };
 
 /**
- * helper for error printing
- * @param {string | Error} error to print
- */
-const error = (error: string | Error) => {
-  console.error(`== ERROR ==
-    ${error instanceof Error ? error.message : error}`);
-  if (env != 'production' && error instanceof Error) {
-    console.log('Full error:', error);
-  }
-}
-
-/**
  * Close all watchers
  */
 const close = () => {
-  builder.config.watcher.close();
-  for (const fname in FileFactory.cache) {
-    FileFactory.cache[fname].unwatch();
-  }
+  watcher.close();
+  builder.close();
 }
 
 gulp.task('watch', Watch);
 gulp.task('build', Build);
 
-export { Watch, Build, error, env };
+export { Watch, Build };

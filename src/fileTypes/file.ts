@@ -1,16 +1,17 @@
 import vinyl from 'vinyl';
 
-import Factory from './factory';
-import builder from '../build';
-import { env } from '../gulpfile';
+import Builder from '../build';
+import { env } from '../global';
 
 class GenericFile {
+  builder: Builder = undefined;
   file: vinyl = undefined;
   contents = "";
   includedBy: string[] = [];
   isIncluded: string = undefined;
   dirty = true;
   isWatching = false;
+  persistent = false;
 
   /**
    * File wrapper for manipulating content
@@ -20,7 +21,6 @@ class GenericFile {
   constructor(parent: string, file: vinyl) {
     if (parent) this.includedBy.push(parent); // parent is the includer
     this.file = file;
-    Factory.cache[file.path] = this;
   }
 
   /**
@@ -106,8 +106,8 @@ class GenericFile {
    * For most files default watcher
    */
   watch() {
-    if (builder.config.watcher && !this.isWatching) {
-      builder.config.watcher.add(this.file.path);
+    if (!this.isWatching) {
+      this.builder.watcher.add(this.file.path);
       this.isWatching = true;
     }
   }
@@ -117,8 +117,8 @@ class GenericFile {
    * For most files default watcher
    */
   unwatch() {
-    if (builder.config.watcher && this.isWatching) {
-      builder.config.watcher.unwatch(this.file.path);
+    if (this.isWatching) {
+      this.builder.watcher.unwatch(this.file.path);
       this.isWatching = false;
     }
   }
