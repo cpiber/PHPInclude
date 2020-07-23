@@ -9,9 +9,11 @@ import FileFactory from './fileTypes/factory';
 class Builder {
   watcher = undefined;
   watchMode = false;
-  entry = "";
+  entry = "index.php";
   src_dir = "src";
   build_dir = "build";
+  debug = false;
+  argv = undefined;
   factory: FileFactory;
 
   constructor(args: any) {
@@ -24,12 +26,63 @@ class Builder {
    * @param args config
    */
   configure(args: any) {
-    if (args.cd) process.chdir(args.cd);
-    this.entry = (args.src ? args.src : 'src') + '/'
-      + (args.entry ? args.entry : 'index.php');
+    this.debug = args.debug !== undefined || this.debug;
+    this.argv = args;
+
+    // load config, change directory, load new config
+    const isAbs = args.config !== undefined && path.isAbsolute(args.config);
+    try {
+      this.loadConfig(args.config);
+    } catch (err) { this.debugLog(err); }
+    if (args.cd) {
+      process.chdir(args.cd);
+      try {
+        if (!isAbs) this.loadConfig(args.config); // load once if absolute path
+      } catch (err) { this.debugLog(err); }
+    }
+
+    // configure from argv
+    this.src_dir = args.src || this.src_dir;
+    this.entry = this.src_dir + path.sep + (args.entry || this.entry);
     this.entry = path.resolve(this.entry);
-    this.src_dir = path.resolve(args.src ? args.src : 'src');
-    this.build_dir = args.dest ? args.dest : 'build';
+    this.src_dir = path.resolve(this.src_dir);
+    this.build_dir = args.dest || this.build_dir;
+  }
+
+  /**
+   * Load config file
+   * @param {string} name file name
+   */
+  loadConfig(name: string = undefined) {
+    if (name === undefined) {
+      // try loading .js/.json config files
+      try {
+        return this.loadConfig('phpinclude.js');
+      } catch (err) { this.debugLog(err); }
+      try {
+        return this.loadConfig('phpinclude.json');
+      } catch (err) { this.debugLog(err); }
+      return;
+    }
+
+    const isAbs = path.isAbsolute(name);
+    const cpath = path.resolve(isAbs ? name : `.${path.sep}${name}`);
+    const content = require(cpath);
+    let config;
+    if (content instanceof Function) {
+      config = content(this.argv);
+    } else {
+      config = content;
+    }
+    if (typeof config !== 'object' || config === null) {
+      this.debugLog(config);
+      throw 'Return not valid (must be non-null object)';
+    }
+
+    // load
+    this.entry = config.entry || this.entry;
+    this.src_dir = config.src || this.src_dir;
+    this.build_dir = config.dest || this.build_dir;
   }
 
   /**
@@ -54,6 +107,7 @@ class Builder {
       try {
         content = fs.readFileSync(filename as string).toString();
       } catch (err) {
+        this.debugLog(err);
         return Promise.reject(
           `${isFilename ? 'File' : 'Entry'} ${filename} doesn't exist`);
       }
@@ -96,7 +150,11 @@ class Builder {
       out.on('error', reject);
     }).then(
       (value)  => { this.clean(); return Promise.resolve(value); },
-      (reason) => { this.clean(); return Promise.reject(reason); }
+      (reason) => {
+        this.clean();
+        this.debugLog(reason);
+        return Promise.reject(reason);
+      }
     ); // add clean step without modifying promise content
   }
 
@@ -115,6 +173,14 @@ class Builder {
     for (const fname in this.factory.cache) {
       this.factory.cache[fname].unwatch();
     }
+  }
+
+  /**
+   * Log in debug mode
+   * @param content msg to log
+   */
+  debugLog(content: any) {
+    if (this.debug) console.debug(content);
   }
 }
 
