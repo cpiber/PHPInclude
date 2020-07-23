@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import vinyl from 'vinyl';
 import gulp from 'gulp';
+import minimist from 'minimist';
+import buildOptions from 'minimist-options';
 import { Readable } from 'stream';
 
 import FileFactory from './fileTypes/factory';
@@ -13,6 +15,7 @@ class Builder {
   src_dir = "src";
   build_dir = "build";
   debug = false;
+  extensions = [];
   argv = undefined;
   factory: FileFactory;
 
@@ -26,7 +29,21 @@ class Builder {
    * @param args config
    */
   configure(args: any) {
-    this.debug = args.debug !== undefined || this.debug;
+    args = minimist(args, buildOptions({
+      debug: {
+        type: 'boolean',
+        default: this.debug
+      },
+      extensions: {
+        type: 'string-array',
+        alias: 'ext'
+      },
+      entry: { type: 'string' },
+      src: { type: 'string' },
+      dest: { type: 'string' },
+    }));
+    args.ext = args.extensions = Array.isArray(args.ext) ? args.ext : [args.ext];
+    this.debug = args.debug;
     this.argv = args;
 
     // load config, change directory, load new config
@@ -47,6 +64,7 @@ class Builder {
     this.entry = path.resolve(this.entry);
     this.src_dir = path.resolve(this.src_dir);
     this.build_dir = args.dest || this.build_dir;
+    this.extensions = this.extensions.concat(args.extensions);
   }
 
   /**
@@ -67,7 +85,12 @@ class Builder {
 
     const isAbs = path.isAbsolute(name);
     const cpath = path.resolve(isAbs ? name : `.${path.sep}${name}`);
-    const content = require(cpath);
+    let content;
+    try {
+      content = require(cpath);
+    } catch (err) {
+      throw `${cpath} could not be loaded`;
+    }
     let config;
     if (content instanceof Function) {
       config = content(this.argv);
@@ -83,6 +106,7 @@ class Builder {
     this.entry = config.entry || this.entry;
     this.src_dir = config.src || this.src_dir;
     this.build_dir = config.dest || this.build_dir;
+    this.extensions = this.extensions.concat(config.extensions || []);
   }
 
   /**
