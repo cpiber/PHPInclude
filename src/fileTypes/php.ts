@@ -19,7 +19,7 @@ class PhpFile extends GenericFile {
     let matches: RegExpExecArray,
       content_parts: string[] = [],
       last = 0;
-    const include_regex = /(?<!\/\/[^\n]*)(include|require)(_once)?\s+(?:"([A-Za-z0-9.\\\/]+)"|'([A-Za-z0-9.\\\/]+)')\s*;/g;
+    const include_regex = /(?<!\/\/[^\n]*)(include|require)(_once)?\s+(?:"([A-Za-z0-9.!\\\/]+)"|'([A-Za-z0-9.!\\\/]+)')\s*;/g;
 
     // resolve all includes
     do {

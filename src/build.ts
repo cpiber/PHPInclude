@@ -20,6 +20,8 @@ class Builder {
   extensions = [];
   argv = undefined;
 
+  static fname = /([A-Za-z0-9.\\\/]+)(?:!.+)?/;
+
   constructor(args: any) {
     this.factory = new FileFactory(this);
     this.configure(args);
@@ -127,17 +129,19 @@ class Builder {
     if (!fs.existsSync(this.build_dir)) fs.mkdirSync(this.build_dir);
     
     let file: vinyl;
+    let _, fname = filename as string;
     const isFilename = filename && typeof filename === "string";
     if (isFilename || !content) {
       filename = isFilename ? filename : this.entry;
+      [_, fname] = Builder.fname.exec(filename as string);
       try {
-        content = fs.readFileSync(filename as string).toString();
+        content = fs.readFileSync(fname).toString();
       } catch (err) {
         this.debugLog(err);
         return Promise.reject(
-          `${isFilename ? 'File' : 'Entry'} ${filename} doesn't exist`);
+          `${isFilename ? 'File' : 'Entry'} ${fname} doesn't exist`);
       }
-      file = new vinyl({ path: path.resolve(filename as string) });
+      file = new vinyl({ path: path.resolve(fname) });
     } else {
       file = filename as vinyl;
     }
@@ -145,7 +149,7 @@ class Builder {
     this.factory.clearIncludes(file.path);
     
     console.log('Building', file.path);
-    const f = this.factory.createFile(parent, file);
+    const f = this.factory.createFile(parent, file, filename as string);
     f.persistent = file.path === this.entry;
     return f.setContent(content);
   }

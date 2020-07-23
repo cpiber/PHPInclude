@@ -69,10 +69,10 @@ class Factory {
    * @param {vinyl} file vinyl file
    * @returns {GenericFile} file
    */
-  createFile(parent: string, file: vinyl): GenericFile {
-    if (this.cache[file.path]) return this.cache[file.path];
+  createFile(parent: string, file: vinyl, name: string): GenericFile {
+    if (this.cache[name]) return this.cache[name];
     let f: GenericFile;
-    const ext_ = path.extname(file.path);
+    const ext_ = path.extname(name);
     const [_, ext, loader] = /\.([\w\d]+)(?:!([\w\d]+))?/.exec(ext_);
 
     if (loader) {
@@ -92,7 +92,7 @@ class Factory {
       f = new GenericFile(this.builder, parent, file);
     }
 
-    this.cache[file.path] = f;
+    this.cache[name] = f;
     return f;
   }
 
@@ -126,7 +126,7 @@ class Factory {
     // file doesn't exist
     if (!f) {
       if (include) {
-        return Promise.resolve(f.genContent());;
+        return Promise.resolve('');
       } else {
         return Promise.reject(`Could not open ${file}`);
       }
