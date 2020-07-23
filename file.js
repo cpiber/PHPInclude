@@ -4,4 +4,4 @@ module.exports = exports = {
   PhpFile: require('./build/fileTypes/php').default,
   WebpackFile: require('./build/fileTypes/webpack').default,
   JsFile: require('./build/fileTypes/js').default
-}
+};
