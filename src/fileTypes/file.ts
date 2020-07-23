@@ -18,7 +18,8 @@ class GenericFile {
    * @param {string} parent includer
    * @param {vinyl} file vinyl file
    */
-  constructor(parent: string, file: vinyl) {
+  constructor(builder: Builder, parent: string, file: vinyl) {
+    this.builder = builder;
     if (parent) this.addParent(parent); // parent is the includer
     this.file = file;
   }
@@ -121,6 +122,20 @@ class GenericFile {
       this.builder.watcher.unwatch(this.file.path);
       this.isWatching = false;
     }
+  }
+
+  /**
+   * Register loader names
+   */
+  static registerLoader(): string[] {
+    return null;
+  }
+
+  /**
+   * Register extensions
+   */
+  static registerExt(): string[] {
+    return null;
   }
 }
 

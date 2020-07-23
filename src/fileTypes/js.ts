@@ -1,13 +1,27 @@
 import WebpackFile from './webpack';
 
 class JsFile extends WebpackFile {
-  constructor(parent: string, file: any) {
-    super(parent, file, {
+  constructor(builder: any, parent: string, file: any) {
+    super(builder, parent, file, {
       output: {
         path: file.path,
         filename: 'file'
       }
     });
+  }
+
+  /**
+   * Register loader names
+   */
+  static registerLoader(): string[] {
+    return ['js'];
+  }
+
+  /**
+   * Register extensions
+   */
+  static registerExt(): string[] {
+    return ['js', 'mjs'];
   }
 }
 

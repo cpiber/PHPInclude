@@ -1,10 +1,12 @@
 import path from 'path';
+import vinyl from 'vinyl';
 
 import Builder from '../build';
 import { error } from '../helpers';
 
 import GenericFile from './file';
 import PhpFile from './php';
+import WebpackFile from './webpack';
 import JsFile from './js';
 
 class Factory {
@@ -12,8 +14,52 @@ class Factory {
   cache: { [key: string]: GenericFile } = {};
   builder: Builder = undefined;
 
+  // Loaders
+  flds: { [key: string]: typeof GenericFile } = {};
+  fext: { [key: string]: typeof GenericFile } = {};
+
   constructor(builder: Builder) {
     this.builder = builder;
+  }
+
+  /**
+   * Load external extensions
+   * @param extensions array of extensions
+   */
+  loadExtensions(extensions: any[]) {
+    const register = (cls: typeof GenericFile) => {
+      const loaders = cls.registerLoader();
+      loaders && loaders.forEach((l) => { this.flds[l] = cls });
+      const exts = cls.registerExt();
+      exts && exts.forEach((e) => { this.fext[e] = cls });
+    };
+    [PhpFile, WebpackFile, JsFile].forEach(register);
+
+    extensions.forEach(ext => {
+      let f: typeof GenericFile;
+      // if it's a function, use it directly, else require
+      if (ext instanceof Function) {
+        f = ext;
+      } else {
+        try {
+          // try normal require, then with resolved path
+          // need to resolve manually because require doesn't respect chdir
+          try {
+            f = require(ext);
+          } catch (err) {
+            f = require(path.resolve(ext));
+          }
+        } catch (err) {
+          error(`Extension ${ext} could not be loaded`);
+          return;
+        }
+        // @ts-expect-error
+        f = f.default || f;
+      }
+      register(f);
+    });
+
+    this.flds['raw'] = GenericFile;
   }
 
   /**
@@ -23,21 +69,29 @@ class Factory {
    * @param {vinyl} file vinyl file
    * @returns {GenericFile} file
    */
-  createFile(ext: string, parent: string, file): GenericFile {
+  createFile(parent: string, file: vinyl): GenericFile {
     if (this.cache[file.path]) return this.cache[file.path];
     let f: GenericFile;
-    switch (ext) {
-      case '.php':
-        f = new PhpFile(parent, file);
-        break;
-      case '.js':
-        f = new JsFile(parent, file);
-        break;
-      default:
-        f = new GenericFile(parent, file);
-        break;
+    const ext_ = path.extname(file.path);
+    const [_, ext, loader] = /\.([\w\d]+)(?:!([\w\d]+))?/.exec(ext_);
+
+    if (loader) {
+      if (loader in this.flds) {
+        this.builder.debugLog(`Using loader: ${loader}`);
+        f = new this.flds[loader](this.builder, parent, file);
+      } else {
+        this.builder.debugLog(`Loader ${loader} not found`);
+      }
     }
-    f.builder = this.builder;
+    if (!f && ext && ext in this.fext) {
+      this.builder.debugLog(`Using extension: ${ext}`);
+      f = new this.fext[ext](this.builder, parent, file);
+    }
+    if (!f) {
+      this.builder.debugLog('Using default loader');
+      f = new GenericFile(this.builder, parent, file);
+    }
+
     this.cache[file.path] = f;
     return f;
   }

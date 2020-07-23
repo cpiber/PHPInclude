@@ -11,13 +11,14 @@ import FileFactory from './fileTypes/factory';
 class Builder {
   watcher = undefined;
   watchMode = false;
+  factory: FileFactory;
+
   entry = "index.php";
   src_dir = "src";
   build_dir = "build";
   debug = false;
   extensions = [];
   argv = undefined;
-  factory: FileFactory;
 
   constructor(args: any) {
     this.factory = new FileFactory(this);
@@ -42,7 +43,6 @@ class Builder {
       src: { type: 'string' },
       dest: { type: 'string' },
     }));
-    args.ext = args.extensions = Array.isArray(args.ext) ? args.ext : [args.ext];
     this.debug = args.debug;
     this.argv = args;
 
@@ -65,6 +65,8 @@ class Builder {
     this.src_dir = path.resolve(this.src_dir);
     this.build_dir = args.dest || this.build_dir;
     this.extensions = this.extensions.concat(args.extensions);
+
+    this.factory.loadExtensions(this.extensions);
   }
 
   /**
@@ -89,7 +91,7 @@ class Builder {
     try {
       content = require(cpath);
     } catch (err) {
-      throw `${cpath} could not be loaded`;
+      throw `Config ${name} could not be loaded`;
     }
     let config;
     if (content instanceof Function) {
@@ -142,10 +144,8 @@ class Builder {
     
     this.factory.clearIncludes(file.path);
     
-    const ext = path.extname(file.path);
-    console.log('Building', file.path, 'with', ext);
-
-    const f = this.factory.createFile(ext, parent, file);
+    console.log('Building', file.path);
+    const f = this.factory.createFile(parent, file);
     f.persistent = file.path === this.entry;
     return f.setContent(content);
   }

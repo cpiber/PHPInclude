@@ -2,11 +2,11 @@ import GenericFile from './file';
 import { error } from '../helpers';
 
 class PhpFile extends GenericFile {
-  static openingRegex = /^\s*<\?php/g;
+  static openingRegex = /^\s*<\?(?:php)?/g;
   static closingRegex = /\?>\s*$/g;
 
-  constructor(parent: string, file: any) {
-    super(parent, file);
+  constructor(builder: any, parent: string, file: any) {
+    super(builder, parent, file);
   }
 
   /**
@@ -71,6 +71,20 @@ class PhpFile extends GenericFile {
       content = `${content}\n<?php`;
     }
     return this.genContent(content);
+  }
+
+  /**
+   * Register loader names
+   */
+  static registerLoader(): string[] {
+    return ['php'];
+  }
+
+  /**
+   * Register extensions
+   */
+  static registerExt(): string[] {
+    return ['php'];
   }
 }
 

@@ -21,8 +21,8 @@ class WebpackFile extends GenericFile {
    * @param {string} parent includer
    * @param {vinyl} file vinyl file
    */
-  constructor(parent: string, file: any, config = undefined) {
-    super(parent, file);
+  constructor(builder: any, parent: string, file: any, config = undefined) {
+    super(builder, parent, file);
     this.defaultConfig.mode = env;
     this.updateConfig(config);
     this.compiler = webpack(this.config);
@@ -141,6 +141,13 @@ class WebpackFile extends GenericFile {
         }
       });
     });
+  }
+
+  /**
+   * Register loader names
+   */
+  static registerLoader(): string[] {
+    return ['webpack'];
   }
 }
 
