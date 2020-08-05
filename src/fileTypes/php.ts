@@ -1,5 +1,6 @@
 import GenericFile from './file';
 import { error } from '../helpers';
+import { env } from '../global';
 
 class PhpFile extends GenericFile {
   static openingRegex = /^\s*<\?(?:php)?/g;
@@ -72,6 +73,17 @@ class PhpFile extends GenericFile {
       content = `${content}\n<?php`;
     }
     return this.genContent(content);
+  }
+
+  /**
+   * Generate content
+   * Adds surrounding comments in dev mode
+   * @param {string} content
+   * @returns {string} content
+   */
+  genContent(content: string = ""): string {
+    if (env === 'production') return content;
+    return `// BEGIN ${this.file.path}\n${content}\n// END ${this.file.path}`;
   }
 
   /**

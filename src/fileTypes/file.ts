@@ -48,13 +48,12 @@ class GenericFile {
 
   /**
    * Generate content
-   * Adds surrounding comments in dev mode
+   * Allows loaders to edit content in post
    * @param {string} content
    * @returns {string} content
    */
   genContent(content: string = ""): string {
-    if (env === 'production') return content;
-    return `// BEGIN ${this.file.path}\n${content}\n// END ${this.file.path}`;
+    return content;
   }
 
   /**

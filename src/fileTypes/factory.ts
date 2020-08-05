@@ -129,7 +129,7 @@ class Factory {
       if (include) {
         return Promise.resolve('');
       } else {
-        return Promise.reject(''); //`Could not open ${file}`);
+        return Promise.reject(); //`Could not open ${file}`);
       }
     }
     // handle _once
