@@ -14,6 +14,7 @@ class Base64File extends GenericFile {
    */
   async setContent(content: Buffer): Promise<string> {
     this.contents = content.toString('base64');
+    this.dirty = false;
     return Promise.resolve(this.contents);
   }
 

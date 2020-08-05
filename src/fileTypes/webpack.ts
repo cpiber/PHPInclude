@@ -36,6 +36,7 @@ class WebpackFile extends GenericFile {
    * @returns {string} content
    */
   async setContent(content: Buffer): Promise<string> {
+    this.dirty = false;
     // is a watcher is in place, webpack will rebuild automatically
     // should only be called once (on include)
     if (this.builder.watchMode) return super.setContent(content);
