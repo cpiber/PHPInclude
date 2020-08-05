@@ -116,7 +116,7 @@ class Factory {
     // create file & build
     if (!this.cache[file] || this.cache[file].dirty) {
       try {
-        await this.builder.build(undefined, file, parent);
+        await this.builder.build(file, parent);
         if (this.builder.watchMode) this.cache[file].watch();
       } catch (e) {
         error(e);

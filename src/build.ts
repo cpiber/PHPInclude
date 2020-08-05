@@ -115,43 +115,37 @@ class Builder {
 
   /**
    * Build file
-   * @param {string} content file content
-   * @param {vinyl|string} file vinyl file or string (path)
+   * @param {string} filename path
    * @param {string} parent parent file
    * @returns {string} new content
    */
   async build(
-    content: string = undefined,
-    filename: vinyl|string = undefined,
+    filename: string = undefined,
     parent: string = undefined
   ): Promise<string> {
     if (!this.entry) return;
     if (!fs.existsSync(this.build_dir)) fs.mkdirSync(this.build_dir);
-    if (!content && filename instanceof vinyl)
-      content = filename.contents.toString();
-    
+
+    let content: Buffer;
     let file: vinyl;
-    let _, fname = filename as string;
+    let _, fname = filename;
     const isFilename = filename && typeof filename === "string";
-    if (isFilename || !content) {
-      filename = isFilename ? filename : this.entry;
-      [_, fname] = Builder.fname.exec(filename as string);
-      try {
-        content = fs.readFileSync(fname).toString();
-      } catch (err) {
-        this.debugLog(err);
-        return Promise.reject(
-          `${isFilename ? 'File' : 'Entry'} ${fname} doesn't exist`);
-      }
-      file = new vinyl({ path: path.resolve(fname) });
-    } else {
-      file = filename as vinyl;
+
+    filename = isFilename ? filename : this.entry;
+    [_, fname] = Builder.fname.exec(filename);
+    try {
+      content = fs.readFileSync(fname);
+    } catch (err) {
+      this.debugLog(err);
+      return Promise.reject(
+        `${isFilename ? 'File' : 'Entry'} ${fname} doesn't exist`);
     }
+    file = new vinyl({ path: path.resolve(fname) });
     
     this.factory.clearIncludes(file.path);
     
     console.log('Building', file.path);
-    const f = this.factory.createFile(parent, file, filename as string);
+    const f = this.factory.createFile(parent, file, filename);
     f.persistent = file.path === this.entry;
     return f.setContent(content);
   }

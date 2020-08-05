@@ -27,11 +27,11 @@ class GenericFile {
   /**
    * Set content
    * Might trigger processing depending on file (see subclasses)
-   * @param {string} content file content
+   * @param {Buffer} content file content
    * @returns {string} content
    */
-  async setContent(content: string): Promise<string> {
-    this.contents = content;
+  async setContent(content: Buffer): Promise<string> {
+    this.contents = content.toString();
     this.dirty = false;
     return Promise.resolve(this.contents);
   }

@@ -15,7 +15,8 @@ class PhpFile extends GenericFile {
    * @param {string} content file content
    * @returns {string} content
    */
-  async setContent(content: string): Promise<string> {
+  async setContent(content: Buffer): Promise<string> {
+    const contents = content.toString();
     let matches: RegExpExecArray,
       content_parts: string[] = [],
       last = 0;
@@ -23,7 +24,7 @@ class PhpFile extends GenericFile {
 
     // resolve all includes
     do {
-      matches = include_regex.exec(content);
+      matches = include_regex.exec(contents);
       if (!matches) break;
       const include = matches[1] === "include",
         once = matches[2] !== undefined,
@@ -31,7 +32,7 @@ class PhpFile extends GenericFile {
       // console.log(include, once, fname);
 
       // save string until include + file contents (recursive build)
-      content_parts.push(content.substring(last, matches.index));
+      content_parts.push(contents.substring(last, matches.index));
       try {
         const fcontent = await this.builder.factory.fillContent(
           this.file.path, fname, include, once);
@@ -42,7 +43,7 @@ class PhpFile extends GenericFile {
       last = include_regex.lastIndex;
     } while (matches);
     // push end of file (after last include)
-    content_parts.push(content.substring(last, content.length));
+    content_parts.push(contents.substring(last, content.length));
 
     this.contents = content_parts.join("");
     this.dirty = false;

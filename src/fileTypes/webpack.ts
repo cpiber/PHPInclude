@@ -35,7 +35,7 @@ class WebpackFile extends GenericFile {
    * @param {string} content file content
    * @returns {string} content
    */
-  async setContent(content: string): Promise<string> {
+  async setContent(content: Buffer): Promise<string> {
     // is a watcher is in place, webpack will rebuild automatically
     // should only be called once (on include)
     if (this.builder.watchMode) return super.setContent(content);
@@ -65,7 +65,7 @@ class WebpackFile extends GenericFile {
           return error(e);
         }
         try {
-          const content = fs.readFileSync(`${this.file.path}/file`).toString();
+          const content = fs.readFileSync(`${this.file.path}/file`);
           await this.update(content);
         } catch (err) {
           error(err);
@@ -120,7 +120,7 @@ class WebpackFile extends GenericFile {
    * Update content then build
    * @param {string} content new content
    */
-  async update(content: string) {
+  async update(content: Buffer) {
     console.log(`${this.file.path} changed (webpack)`);
     this.builder.factory.dirty(this.file.path); // make all that include dirty
     await super.setContent(content); // sets self 'clean'
