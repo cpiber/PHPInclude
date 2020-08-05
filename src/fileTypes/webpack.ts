@@ -59,8 +59,11 @@ class WebpackFile extends GenericFile {
       this.watching = this.compiler.watch({
         aggregateTimeout: 300
       }, async (err, stats) => {
-        const ret = this.buildCB(err, stats);
-        if (ret !== "") return error(ret);
+        try {
+          this.buildCB(err, stats);
+        } catch (e) {
+          return error(e);
+        }
         try {
           const content = fs.readFileSync(`${this.file.path}/file`).toString();
           await this.update(content);
@@ -87,32 +90,30 @@ class WebpackFile extends GenericFile {
    * Merge config files
    * @param config provided config object
    */
-  updateConfig(config) {
+  updateConfig(config: any) {
     this.config = Object.assign({}, this.defaultConfig, config, {
       entry: this.file.path,
-      performance: {  hints: false } // disable build info
+      performance: { hints: false } // disable build info
     });
   }
 
   /**
    * Webpack errorhandling callback (watch/run)
    */
-  buildCB(err: Error|string, stats: webpack.Stats): string {
+  buildCB(err: Error|string, stats: webpack.Stats) {
     // error handling
     if (err) {
       error((err as Error).stack || err as string);
-      return (err as Error).stack || err as string;
+      throw (err as Error).stack || err as string;
     }
     const info = stats.toString();
     if (stats.hasErrors()) {
       error(info);
-      return info;
+      throw info;
     }
     if (stats.hasWarnings()) {
       error(info);
     }
-    // rebuild
-    return "";
   }
 
   /**
@@ -120,6 +121,7 @@ class WebpackFile extends GenericFile {
    * @param {string} content new content
    */
   async update(content: string) {
+    console.log(`${this.file.path} changed (webpack)`);
     this.builder.factory.dirty(this.file.path); // make all that include dirty
     await super.setContent(content); // sets self 'clean'
     await this.builder.rebuild();
@@ -131,8 +133,11 @@ class WebpackFile extends GenericFile {
   async build() {
     return new Promise<string>((resolve, reject) => {
       this.compiler.run((err, stats) => {
-        const ret = this.buildCB(err, stats);
-        if (ret !== "") return reject(ret);
+        try {
+          this.buildCB(err, stats);
+        } catch (e) {
+          return reject(e);
+        }
         try {
           resolve(fs.readFileSync(`${this.file.path}/file`).toString());
         } catch (err) {

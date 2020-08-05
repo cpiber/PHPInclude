@@ -127,10 +127,8 @@ class Builder {
   ): Promise<string> {
     if (!this.entry) return;
     if (!fs.existsSync(this.build_dir)) fs.mkdirSync(this.build_dir);
-    if (!content && filename instanceof vinyl) {
+    if (!content && filename instanceof vinyl)
       content = filename.contents.toString();
-      console.log('read from vinyl', content);
-    }
     
     let file: vinyl;
     let _, fname = filename as string;
