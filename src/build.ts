@@ -20,7 +20,7 @@ class Builder {
   extensions = [];
   argv = undefined;
 
-  static fname = /([A-Za-z0-9.\\\/]+)(?:!.+)?/;
+  static fname = /([A-Za-z0-9\-_.\\\/]+)(?:!.+)?/;
 
   constructor(args: any) {
     this.factory = new FileFactory(this);
@@ -66,7 +66,7 @@ class Builder {
     this.entry = path.resolve(this.entry);
     this.src_dir = path.resolve(this.src_dir);
     this.build_dir = args.dest || this.build_dir;
-    this.extensions = this.extensions.concat(args.extensions);
+    this.extensions = this.extensions.concat(args.extensions || []);
 
     this.factory.loadExtensions(this.extensions);
   }
@@ -127,6 +127,10 @@ class Builder {
   ): Promise<string> {
     if (!this.entry) return;
     if (!fs.existsSync(this.build_dir)) fs.mkdirSync(this.build_dir);
+    if (!content && filename instanceof vinyl) {
+      content = filename.contents.toString();
+      console.log('read from vinyl', content);
+    }
     
     let file: vinyl;
     let _, fname = filename as string;
@@ -177,7 +181,11 @@ class Builder {
       out.on('end', () => resolve(content));
       out.on('error', reject);
     }).then(
-      (value)  => { this.clean(); return Promise.resolve(value); },
+      (value)  => {
+        this.clean();
+        console.log('Done');
+        return Promise.resolve(value);
+      },
       (reason) => {
         this.clean();
         this.debugLog(reason);

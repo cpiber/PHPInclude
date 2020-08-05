@@ -5,8 +5,10 @@ import { env } from './global';
  * @param {string | Error} error to print
  */
 const error = (error: string | Error) => {
+  const msg = error instanceof Error ? error.message : error;
+  if (!msg) return;
   console.error(`== ERROR ==
-    ${error instanceof Error ? error.message : error}`);
+    ${msg}`);
   if (env !== 'production' && error instanceof Error) {
     console.log('Full error:', error);
   }

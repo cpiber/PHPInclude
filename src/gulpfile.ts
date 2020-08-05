@@ -30,7 +30,10 @@ const Watch = async () => {
 
     // watch entry file, other files are added when needed
     console.log(`Watching ${builder.entry}`);
-    builder.watcher = watcher = watch(builder.entry, async (file) => {
+    builder.watchMode = true;
+    builder.watcher = watcher = watch(builder.entry, {
+      read: false
+    }, async (file) => {
       builder.factory.dirty(file.path);
       await build();
     });
@@ -50,8 +53,8 @@ const Build = async () => {
  * Close all watchers
  */
 const close = () => {
-  watcher.close();
   builder.close();
+  watcher.close();
 }
 
 gulp.task('watch', Watch);

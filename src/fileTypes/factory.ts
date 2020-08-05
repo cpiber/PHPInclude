@@ -5,6 +5,7 @@ import Builder from '../build';
 import { error } from '../helpers';
 
 import GenericFile from './file';
+import Base64File from './base64';
 import PhpFile from './php';
 import WebpackFile from './webpack';
 import JsFile from './js';
@@ -33,7 +34,7 @@ class Factory {
       const exts = cls.registerExt();
       exts && exts.forEach((e) => { this.fext[e] = cls });
     };
-    [PhpFile, WebpackFile, JsFile].forEach(register);
+    [Base64File, PhpFile, WebpackFile, JsFile].forEach(register);
 
     extensions.forEach(ext => {
       let f: typeof GenericFile;
@@ -128,12 +129,12 @@ class Factory {
       if (include) {
         return Promise.resolve('');
       } else {
-        return Promise.reject(`Could not open ${file}`);
+        return Promise.reject(''); //`Could not open ${file}`);
       }
     }
     // handle _once
+    f.addParent(parent);
     if (once && f.alreadyIncluded()) {
-      f.addParent(parent);
       return Promise.resolve(f.genContent());
     } else {
       return Promise.resolve(f.getContent(parent));
@@ -150,7 +151,7 @@ class Factory {
       if (f && f.wasIncludedBy(filename)) {
         f.removeInclude(filename);
         // dangling file, will be deleted when cleaning
-        if (!f.includedBy.length) this.clearIncludes(fname);
+        // if (!f.includedBy.length) this.clearIncludes(fname);
       }
     }
   }
@@ -173,11 +174,17 @@ class Factory {
    * Unwatch loose files and remove cache objects
    */
   clean() {
-    for (const fname in this.cache) {
-      const f = this.cache[fname];
-      if (f && !f.alreadyIncluded() && !f.persistent) {
-        if (this.builder.watchMode) this.cache[fname].unwatch();
-        delete this.cache[fname];
+    let done = false;
+    while (!done) {
+      done = true;
+      for (const fname in this.cache) {
+        const f = this.cache[fname];
+        if (f && !f.alreadyIncluded() && !f.persistent) {
+          this.clearIncludes(fname);
+          if (this.builder.watchMode) this.cache[fname].unwatch();
+          delete this.cache[fname];
+          done = false; // potentially new dangling files from clear above
+        }
       }
     }
   }

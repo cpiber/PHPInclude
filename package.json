@@ -9,6 +9,7 @@
     "watch": "gulp watch",
     "build": "gulp build",
     "test": "cd src ; NODE_ENV=development gulp watch --cd ../test",
+    "test2": "cd src ; NODE_ENV=development gulp watch --cd ../test --entry test2/index.php",
     "testbuild": "cd src ; NODE_ENV=production gulp build --cd ../test",
     "clean": "rm -rf build/"
   },
