@@ -30,9 +30,11 @@ class Factory {
   loadExtensions(extensions: any[]) {
     const register = (cls: typeof GenericFile) => {
       const loaders = cls.registerLoader();
-      loaders && loaders.forEach((l) => { this.flds[l] = cls });
+      if (loaders !== undefined && loaders !== null)
+        loaders.forEach((l) => { this.flds[l] = cls });
       const exts = cls.registerExt();
-      exts && exts.forEach((e) => { this.fext[e] = cls });
+      if (exts !== undefined && exts !== null)
+        exts.forEach((e) => { this.fext[e] = cls });
     };
     [Base64File, PhpFile, WebpackFile, JsFile].forEach(register);
 

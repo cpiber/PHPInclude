@@ -5,7 +5,13 @@ import { argv } from './global';
 import { error } from './helpers';
 import Builder from './build';
 
-const builder = new Builder(argv);
+let builder;
+try {
+  builder = new Builder(argv);
+} catch (err) {
+  error(err);
+  process.exit(1);
+}
 let watcher;
 
 /**
@@ -34,6 +40,7 @@ const Watch = async () => {
     builder.watcher = watcher = watch(builder.entry, {
       read: false
     }, async (file) => {
+      console.log(`${file.path} changed`);
       builder.factory.dirty(file.path);
       await build();
     });

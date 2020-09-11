@@ -1,6 +1,7 @@
 import { createFsFromVolume, Volume } from 'memfs';
 import path from 'path';
 import webpack from 'webpack';
+import merge from 'webpack-merge';
 
 import GenericFile from './file';
 import { env } from '../global';
@@ -13,8 +14,14 @@ fs.join = path.join.bind(path);
 class WebpackFile extends GenericFile {
   compiler: webpack.Compiler;
   watching: webpack.Compiler.Watching;
-  config: any;
-  defaultConfig: any = {};
+  config: webpack.Configuration;
+
+  static defaultConfig: webpack.Configuration = {
+    mode: env,
+    optimization: {
+      minimize: false
+    }
+  };
 
   /**
    * File wrapper for javascript files, compiled using webpack
@@ -23,7 +30,6 @@ class WebpackFile extends GenericFile {
    */
   constructor(builder: any, parent: string, file: any, config = undefined) {
     super(builder, parent, file);
-    this.defaultConfig.mode = env;
     this.updateConfig(config);
     this.compiler = webpack(this.config);
     this.compiler.outputFileSystem = fs;
@@ -91,11 +97,13 @@ class WebpackFile extends GenericFile {
    * Merge config files
    * @param config provided config object
    */
-  updateConfig(config: any) {
-    this.config = Object.assign({}, this.defaultConfig, config, {
+  updateConfig(config: webpack.Configuration) {
+    const def = WebpackFile.defaultConfig ? WebpackFile.defaultConfig : {};
+    this.config = merge(def, config, {
       entry: this.file.path,
+      output: { path: this.file.path }, // filename set by implementation
       performance: { hints: false } // disable build info
-    });
+    } as webpack.Configuration);
   }
 
   /**
@@ -104,12 +112,12 @@ class WebpackFile extends GenericFile {
   buildCB(err: Error|string, stats: webpack.Stats) {
     // error handling
     if (err) {
-      error((err as Error).stack || err as string);
+      // error((err as Error).stack || err as string);
       throw (err as Error).stack || err as string;
     }
     const info = stats.toString();
     if (stats.hasErrors()) {
-      error(info);
+      // error(info);
       throw info;
     }
     if (stats.hasWarnings()) {
