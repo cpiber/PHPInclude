@@ -1,5 +1,7 @@
 test/
 build/
+dest/
+.tsbuildinfo
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
