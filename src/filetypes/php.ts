@@ -22,7 +22,7 @@ class PhpFile extends BuildFile {
   process(filename: string, contents: string | Buffer) {
     contents = contents.toString();
     const ast = PhpFile.parser.parseCode(contents, filename);
-    // console.log(ast);
+    console.log(ast);
     strictEqual(ast.errors.length, 0);
     
     const globals: string[] = [];
@@ -33,8 +33,8 @@ class PhpFile extends BuildFile {
       }
     };
     for (const expr of ast.children) {
-      if (NodeIsExpression(ast) && NodeIsAssign(ast.expression)) {
-        addIfVar(ast.expression.left);
+      if (NodeIsExpression(expr) && NodeIsAssign(expr.expression)) {
+        addIfVar(expr.expression.left);
       }
     }
     const g = new Set(globals);
@@ -42,6 +42,10 @@ class PhpFile extends BuildFile {
     let newcontents = contents;
     // TODO: replace includes
     newcontents = newcontents.trim().replace(/^<\?(php)?[^\S\r\n]*\n?|\n?[^\S\r\n]*\?>$/, '');
+    if (ast.children.length) {
+      if (ast.children[ast.children.length - 1].kind === 'inline' && !newcontents.match(/<\?(php)?$/)) newcontents += '\n<?php';
+      if (ast.children[0].kind === 'inline' && !newcontents.match(/^\?>/)) newcontents = '?>\n' + newcontents;
+    }
     if (g.size) newcontents = `global ${Array.from(g).map(s => `$${s}`).join(', ')};\n${newcontents}`;
     this.setContent(filename, newcontents);
     return true;
