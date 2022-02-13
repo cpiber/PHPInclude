@@ -1,9 +1,14 @@
 import { strictEqual } from 'assert';
-import { basename, join } from 'path';
+import { dirname, join } from 'path';
 import { Array as _Array, ArrowFunc, Assign, AssignRef, Bin, Block, ByRef, Call, Case, Cast, Catch, Class, ClassConstant, Clone, Closure, Constant, ConstantStatement, Declare, DeclareDirective, Do, Echo, Encapsed, EncapsedPart, Engine, Entry, Eval, Exit, ExpressionStatement, For, Foreach, Function, If, Include, Interface, Magic, Method, Namespace, New, Node, OffsetLookup, Post, Pre, Property, PropertyLookup, PropertyStatement, RetIf, Return, Static, StaticLookup, StaticVariable, String, Switch, Throw, Trait, Try, Unary, Variable, While, Yield, YieldFrom } from 'php-parser';
 import type Builder from '..';
 import { warn } from '../helpers';
 import { BuildFile } from './file';
+
+interface Inc {
+  what: string;
+  require: boolean;
+}
 
 class PhpFile extends BuildFile {
   static parser: Engine;
@@ -20,7 +25,7 @@ class PhpFile extends BuildFile {
     });
   }
 
-  process(filename: string, contents: string | Buffer) {
+  async process(filename: string, contents: string | Buffer) {
     contents = contents.toString();
     const ast = PhpFile.parser.parseCode(contents, filename);
     // console.log(ast);
@@ -42,17 +47,16 @@ class PhpFile extends BuildFile {
     }
 
     const includes: Array<Include> = collectIncludes(ast.children);
-    const incpaths: Array<string> = [];
+    const incpaths: Array<Inc> = [];
     
     let newcontents = contents;
     let offset = 0;
-    // TODO: properly use once/require
     // TODO: replace magic constants
     for (const include of includes) {
       if (!NodeIsString(include.target)) throw `Node kind \`${include.target.kind}\` not supported for includes`;
-      const what = join(basename(filename), include.target.value);
-      incpaths.push(what);
-      const call = `${BuildFile.generateModuleName(what)}()${newcontents[include.loc!.end.offset + offset - 1] === ';' ? ';' : ''}`;
+      const what = join(dirname(filename), include.target.value);
+      incpaths.push({ what, require: include.require });
+      const call = BuildFile.generateModuleCall(what, include.require, include.once, newcontents[include.loc!.end.offset + offset - 1] === ';');
       const oldlen = include.loc!.end.offset - include.loc!.start.offset;
       const newlen = call.length;
       newcontents = newcontents.substring(0, include.loc!.start.offset + offset) + call + newcontents.substring(include.loc!.end.offset + offset);
@@ -60,11 +64,15 @@ class PhpFile extends BuildFile {
     }
     newcontents = newcontents.trim().replace(/^<\?(php)?[^\S\r\n]*\n?|\n?[^\S\r\n]*\?>$/, '');
     if (ast.children.length) {
-      if (ast.children[ast.children.length - 1].kind === 'inline' && !newcontents.match(/<\?(php)?$/)) newcontents += '\n<?php';
-      if (ast.children[0].kind === 'inline' && !newcontents.match(/^\?>/)) newcontents = '?>\n' + newcontents;
+      if (ast.children[0].kind === 'inline' && !newcontents.match(/^\?>/)) newcontents = '?>' + newcontents;
+      if (ast.children[ast.children.length - 1].kind === 'inline' && !newcontents.match(/<\?(php)?$/)) newcontents += '<?php';
     }
     if (globals.size) newcontents = `global ${Array.from(globals).map(s => `$${s}`).join(', ')};\n${newcontents}`;
     this.setContent(filename, newcontents);
+    for (const inc of incpaths) {
+      if (!(await this.builder.buildFileIfNotCached(inc.what, inc.require)))
+        return false;
+    }
     return true;
   }
 

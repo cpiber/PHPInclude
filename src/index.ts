@@ -8,15 +8,25 @@ class Builder {
   
   constructor(private options: import('minimist').ParsedArgs) {}
 
-  async buildFile(filename: string, contents?: string | Buffer) {
+  async buildFile(filename: string, contents?: string | Buffer, required = false) {
     try {
       if (!contents) contents = await readFile(filename);
-      const file = this.constructFileFromName(filename);
-      return file.process(filename, contents);
     } catch (e) {
-      error(e, `Error while building file \`${filename}\`:`);
-      return false;
+      if (required) {
+        error(e, `Error while building file \`${filename}\`:`);
+        return false;
+      } else {
+        return true;
+      }
     }
+    
+    const file = this.constructFileFromName(filename);
+    return file.process(filename, contents);
+  }
+
+  async buildFileIfNotCached(filename: string, required = false) {
+    if (filename in this.files) return true;
+    return this.buildFile(filename, undefined, required);
   }
 
   async buildEntry(entry: string, outfile: string) {
@@ -25,13 +35,13 @@ class Builder {
   }
 
   async rebuildWithEntry(entry: string, outfile: string) {
-    let outcontents = '<?php\n';
+    let outcontents = `<?php\n${BuildFile.generateModuleHelpers()}\n\n`;
     for (const fname in this.files) {
       const f = this.files[fname];
       outcontents += f.getContents() + '\n';
     }
     // call to main module
-    outcontents += `\n${BuildFile.generateModuleName(entry)}();`;
+    outcontents += `\n${BuildFile.generateModuleCall(entry)}`;
     await mkdir(dirname(outfile), { recursive: true });
     await writeFile(outfile, outcontents);
     return true;
