@@ -29,17 +29,21 @@ ${contents}
 }`;
   }
   static generateModuleCall(filename: string, require = true, once = false, withSemi = true) {
-    const call = `__helpers_call(${JSON.stringify(this.generateModuleName(filename))}, ${require}, ${once})`;
+    const call = `__helpers_call(${JSON.stringify(filename)}, ${require}, ${once})`;
     return withSemi ? call + ';' : call;
   }
   static generateModuleHelpers() {
     return `
 $__helpers_module_dict = array();
+function __helpers_tomodule($module) {
+  return "__module_" . md5($module)${isDev() ? ' . "__" . pathinfo($module, PATHINFO_FILENAME)' : ""};
+}
 function __helpers_call($module, $require, $once) {
   global $__helpers_module_dict;
-  if ($once && array_key_exists($module, $__helpers_module_dict)) return;
-  $__helpers_module_dict[$module] = true;
-  if (function_exists($module)) return call_user_func($module);
+  $mod = __helpers_tomodule($module);
+  if ($once && array_key_exists($mod, $__helpers_module_dict)) return;
+  $__helpers_module_dict[$mod] = true;
+  if (function_exists($mod)) return call_user_func($mod);
   else if ($require) die("Module $module does not exist, this should not happen");
   else echo "Warning: Module $module does not exist in " . __FILE__ . " on line " . __LINE__ . "\\n";
 }`;
