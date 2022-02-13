@@ -24,6 +24,7 @@ abstract class BuildFile {
   protected setContent(filename: string, contents: string) {
     this.filename = filename;
     this.contents = BuildFile.generateModule(filename, contents);
+    this.includes.clear();
     this.builder.registerFile(this);
   }
   protected async includeFiles(incpaths: Array<Inc>) {
@@ -41,6 +42,12 @@ abstract class BuildFile {
     return true;
   }
 
+  public registerIncludes() {
+    this.includes.forEach(inc => {
+      this.builder.fileByName(inc).includedBy.add(this.getFilename());
+    });
+    return true;
+  }
   public removeAbandoned() {
     this.includes.forEach(inc => {
       const f = this.builder.fileByName(inc);

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import { watch } from 'chokidar';
 import minimist from 'minimist';
 import buildOptions from 'minimist-options';
+import { performance } from 'perf_hooks';
 import Builder from '.';
 import { debugLog, error } from './helpers';
 
@@ -36,11 +38,41 @@ if (args._.length) {
 }
 const builder = new Builder(args);
 
-if (args.watch) {
-  throw "Watch not supported yet";
-} else {
-  builder.buildEntry(f, o).then(res => {
-    if (!res) debugLog('Finished with errors.');
-    else console.log('Build finished successfully.');
+const timedCall = <T>(promise: Promise<T>) => {
+  const start = performance.now();
+  return promise
+    .then(value => ({ value, time: performance.now() - start }))
+    .catch(reason => Promise.reject({ reason, time: performance.now() - start }));
+};
+
+export const runBuild = async (entryfile: string, outputfile: string) => {
+  const { value: res, time } = await timedCall(builder.buildEntry(entryfile, outputfile));
+  if (!res) debugLog('Finished with errors.');
+  else console.log(`Build finished successfully in ${time.toFixed(2)}ms.`);
+};
+
+export const watchBuild = async (builder: Builder, entryfile: string, outputfile: string) => {
+  const watcher = watch([], {
+    // awaitWriteFinish: true,
   });
+  const rebuild = async (path: string) => {
+    const { value: res, time } = await timedCall(builder.rebuildFile(path).then(res => res && builder.rebuildWithEntry(entryfile, outputfile)));
+    if (res) {
+      console.log(`Rebuild finished successfully in ${time.toFixed(2)}ms.`);
+    } else {
+      console.error(`Encountered an error while building file \`${path}\``);
+    }
+  }
+  watcher.on('change', rebuild);
+  watcher.on('unlink', rebuild);
+  builder.on('file-added', (file: string) => watcher.add(file));
+  builder.on('built', (file: string) => debugLog(`Built file \`${file}\` successfully.`));
+  await runBuild(entryfile, outputfile);
+  return watcher;
+};
+
+if (args.watch) {
+  watchBuild(builder, f, o);
+} else {
+  runBuild(f, o);
 }
