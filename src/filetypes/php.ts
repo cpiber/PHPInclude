@@ -28,8 +28,6 @@ class PhpFile extends BuildFile {
   async process(filename: string, contents: string | Buffer) {
     contents = contents.toString();
     const ast = PhpFile.parser.parseCode(contents, filename);
-    // console.log(ast);
-    // console.log(JSON.stringify(ast, undefined, 2));
     strictEqual(ast.errors.length, 0);
     
     const globals: Set<string> = new Set();
@@ -52,6 +50,7 @@ class PhpFile extends BuildFile {
     let newcontents = contents;
     let offset = 0;
     // TODO: replace magic constants
+    // TODO: include should give access to all variables in current scope
     for (const include of includes) {
       if (!NodeIsString(include.target)) throw `Node kind \`${include.target.kind}\` not supported for includes`;
       const what = join(dirname(filename), include.target.value);

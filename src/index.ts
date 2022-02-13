@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname, extname } from 'path';
-import { BuildFile, PhpFile, PlainFile } from './filetypes';
+import { Base64File, BuildFile, PhpFile, PlainFile } from './filetypes';
 import { error } from './helpers';
 
 type Sub = (new (b: Builder) => BuildFile) & { [k in keyof typeof BuildFile]: typeof BuildFile[k] };
@@ -10,6 +10,7 @@ class Builder {
     '.php': PhpFile,
     '.txt': PlainFile,
     '.js':  PlainFile,
+    '.bin': Base64File,
   };
   
   constructor(private options: import('minimist').ParsedArgs) {}
