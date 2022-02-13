@@ -1,10 +1,16 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname, extname } from 'path';
-import { BuildFile, PhpFile } from './filetypes';
+import { BuildFile, PhpFile, PlainFile } from './filetypes';
 import { error } from './helpers';
 
+type Sub = (new (b: Builder) => BuildFile) & { [k in keyof typeof BuildFile]: typeof BuildFile[k] };
 class Builder {
   private files: { [key: string]: BuildFile } = {};
+  private extmappings: { [key: string]: Sub } = {
+    '.php': PhpFile,
+    '.txt': PlainFile,
+    '.js':  PlainFile,
+  };
   
   constructor(private options: import('minimist').ParsedArgs) {}
 
@@ -48,8 +54,9 @@ class Builder {
   }
 
   constructFileFromName(filename: string) {
-    if (extname(filename) === '.php') return new PhpFile(this);
-    throw "filetype not supported yet";
+    const ext = extname(filename);
+    if (ext in this.extmappings) return new this.extmappings[ext](this);
+    throw "filetype not supported (yet)";
   }
 
   registerFile(file: BuildFile) {
