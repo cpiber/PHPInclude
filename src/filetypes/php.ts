@@ -25,11 +25,11 @@ class PhpFile extends BuildFile {
     console.log(ast);
     strictEqual(ast.errors.length, 0);
     
-    const globals: string[] = [];
+    const globals: Set<string> = new Set();
     const addIfVar = (node: Node) => {
       if (NodeIsVariable(node)) {
         if (typeof node.name !== 'string') warn(`encountered dynamic variable access at top level (${node.loc})`);
-        else globals.push(node.name);
+        else globals.add(node.name);
       }
     };
     for (const expr of ast.children) {
@@ -37,7 +37,6 @@ class PhpFile extends BuildFile {
         addIfVar(expr.expression.left);
       }
     }
-    const g = new Set(globals);
     
     let newcontents = contents;
     // TODO: replace includes
@@ -46,7 +45,7 @@ class PhpFile extends BuildFile {
       if (ast.children[ast.children.length - 1].kind === 'inline' && !newcontents.match(/<\?(php)?$/)) newcontents += '\n<?php';
       if (ast.children[0].kind === 'inline' && !newcontents.match(/^\?>/)) newcontents = '?>\n' + newcontents;
     }
-    if (g.size) newcontents = `global ${Array.from(g).map(s => `$${s}`).join(', ')};\n${newcontents}`;
+    if (globals.size) newcontents = `global ${Array.from(globals).map(s => `$${s}`).join(', ')};\n${newcontents}`;
     this.setContent(filename, newcontents);
     return true;
   }

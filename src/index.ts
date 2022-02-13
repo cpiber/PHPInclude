@@ -19,15 +19,19 @@ class Builder {
     }
   }
 
-  async buildEntry(filename: string, outfile: string) {
-    if (!(await this.buildFile(filename))) return false;
+  async buildEntry(entry: string, outfile: string) {
+    if (!(await this.buildFile(entry))) return false;
+    return this.rebuildWithEntry(entry, outfile);
+  }
+
+  async rebuildWithEntry(entry: string, outfile: string) {
     let outcontents = '<?php\n';
     for (const fname in this.files) {
       const f = this.files[fname];
       outcontents += f.getContents() + '\n';
     }
     // call to main module
-    outcontents += `\n${BuildFile.generateModuleName(filename)}();`;
+    outcontents += `\n${BuildFile.generateModuleName(entry)}();`;
     await mkdir(dirname(outfile), { recursive: true });
     await writeFile(outfile, outcontents);
     return true;
