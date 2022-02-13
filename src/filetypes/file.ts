@@ -4,18 +4,52 @@ import { basename, extname } from 'path';
 import type Builder from '..';
 import { isDev } from '../helpers';
 
+interface Inc {
+  what: string;
+  require: boolean;
+}
+
 abstract class BuildFile {
   private filename?: string;
   private contents?: string;
+  private includedBy: Set<string> = new Set();
+  private includes: Set<string> = new Set();
+
   constructor(protected builder: Builder) {}
   abstract process(filename: string, contents: string | Buffer): Promise<boolean>;
   public getFilename(): string { notStrictEqual(this.filename, undefined); return this.filename!; }
   public getContents(): string { notStrictEqual(this.contents, undefined); return this.contents!; }
+  public isPresent(): boolean { return !!this.includedBy.size; }
 
   protected setContent(filename: string, contents: string) {
     this.filename = filename;
     this.contents = BuildFile.generateModule(filename, contents);
     this.builder.registerFile(this);
+  }
+  protected async includeFiles(incpaths: Array<Inc>) {
+    for (const inc of incpaths) {
+      if (!(await this.builder.buildFileIfNotCached(inc.what, inc.require)))
+        return false;
+    }
+    for (const inc of incpaths) {
+      const f = this.builder.fileByName(inc.what);
+      if (f) {
+        this.includes.add(inc.what);
+        f.includedBy.add(this.getFilename());
+      }
+    }
+    return true;
+  }
+
+  public removeAbandoned() {
+    this.includes.forEach(inc => {
+      const f = this.builder.fileByName(inc);
+      f.includedBy.delete(this.getFilename());
+      if (!f.includedBy.size) f.removeAbandoned();
+    });
+  }
+  public putEntry() {
+    this.includedBy.add('__entry__');
   }
 
   static generateModuleName(filename: string) {
@@ -52,4 +86,4 @@ function __helpers_call($module, $require, $once) {
   }
 }
 
-export { BuildFile };
+export { BuildFile, Inc };

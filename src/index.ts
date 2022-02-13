@@ -15,7 +15,7 @@ class Builder {
   
   constructor(private options: import('minimist').ParsedArgs) {}
 
-  async buildFile(filename: string, contents?: string | Buffer, required = false) {
+  async buildFile(filename: string, contents?: string | Buffer, required = true) {
     try {
       if (!contents) contents = await readFile(filename);
     } catch (e) {
@@ -30,22 +30,25 @@ class Builder {
     const file = this.constructFileFromName(filename);
     return file.process(filename, contents);
   }
-
-  async buildFileIfNotCached(filename: string, required = false) {
+  async buildFileIfNotCached(filename: string, required = true) {
     if (filename in this.files) return true;
     return this.buildFile(filename, undefined, required);
+  }
+  async rebuildFile(filename: string, contents?: string | Buffer) {
+    if (filename in this.files) this.files[filename].removeAbandoned();
+    return this.buildFile(filename, contents);
   }
 
   async buildEntry(entry: string, outfile: string) {
     if (!(await this.buildFile(entry))) return false;
+    this.files[entry].putEntry();
     return this.rebuildWithEntry(entry, outfile);
   }
-
   async rebuildWithEntry(entry: string, outfile: string) {
     let outcontents = `<?php\n${BuildFile.generateModuleHelpers()}\n\n`;
     for (const fname in this.files) {
       const f = this.files[fname];
-      outcontents += f.getContents() + '\n';
+      if (f.isPresent()) outcontents += f.getContents() + '\n';
     }
     // call to main module
     outcontents += `\n${BuildFile.generateModuleCall(entry)}`;
@@ -62,6 +65,9 @@ class Builder {
 
   registerFile(file: BuildFile) {
     this.files[file.getFilename()] = file;
+  }
+  fileByName(filename: string) {
+    return this.files[filename];
   }
 };
 

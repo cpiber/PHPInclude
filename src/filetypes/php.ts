@@ -3,12 +3,7 @@ import { dirname, join } from 'path';
 import { Array as _Array, ArrowFunc, Assign, AssignRef, Bin, Block, ByRef, Call, Case, Cast, Catch, Class, ClassConstant, Clone, Closure, Constant, ConstantStatement, Declare, DeclareDirective, Do, Echo, Encapsed, EncapsedPart, Engine, Entry, Eval, Exit, ExpressionStatement, For, Foreach, Function, If, Include, Interface, Magic, Method, Namespace, New, Node, OffsetLookup, Post, Pre, Property, PropertyLookup, PropertyStatement, RetIf, Return, Static, StaticLookup, StaticVariable, String, Switch, Throw, Trait, Try, Unary, Variable, While, Yield, YieldFrom } from 'php-parser';
 import type Builder from '..';
 import { warn } from '../helpers';
-import { BuildFile } from './file';
-
-interface Inc {
-  what: string;
-  require: boolean;
-}
+import { BuildFile, Inc } from './file';
 
 class PhpFile extends BuildFile {
   static parser: Engine;
@@ -68,11 +63,7 @@ class PhpFile extends BuildFile {
     }
     if (globals.size) newcontents = `global ${Array.from(globals).map(s => `$${s}`).join(', ')};\n${newcontents}`;
     this.setContent(filename, newcontents);
-    for (const inc of incpaths) {
-      if (!(await this.builder.buildFileIfNotCached(inc.what, inc.require)))
-        return false;
-    }
-    return true;
+    return this.includeFiles(incpaths);
   }
 
 }
