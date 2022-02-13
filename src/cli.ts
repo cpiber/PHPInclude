@@ -41,5 +41,6 @@ if (args.watch) {
 } else {
   builder.buildEntry(f, o).then(res => {
     if (!res) debugLog('Finished with errors.');
+    else console.log('Build finished successfully.');
   });
 }

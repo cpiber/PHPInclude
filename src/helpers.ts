@@ -1,4 +1,9 @@
+import { Location as PLocation } from 'php-parser';
 import { env } from './global';
+
+interface Location extends PLocation {
+  file?: string;
+}
 
 /**
  * @returns whether program is in debug mode
@@ -24,14 +29,19 @@ const error = (error: string | Error | unknown, title?: string) => {
  * helper for warning printing
  * @param {string} warning to print
  */
-const warn = (msg: string) => {
-  console.warn(`WARNING: ${msg}!`);
-}
+const warn = (msg: string, loc?: Location) => console.warn(`WARNING:${loc && (locToString(loc) + ':') || ''} ${msg}!`);
 
 /**
  * Log if in debug mode
  * @param args things to log
  */
-const debugLog: typeof console.log = (...args) => isDev() && console.log.apply(console, args);
+const debugLog: typeof console.log = (...args) => isDev() && console.log.apply(console, ['DEBUG:', ...args]);
 
-export { isDev, error, warn, debugLog };
+/**
+ * Stringify php-parser location
+ * @param locaction to print
+ * @returns stringified location
+ */
+const locToString = (loc: Location, file?: string) => `${loc.file || file || '[unkown]'}:${loc.start.line}:${loc.start.column}`;
+
+export { isDev, error, warn, debugLog, locToString, Location };

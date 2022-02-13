@@ -1,6 +1,6 @@
 import { strictEqual } from 'assert';
 import { basename, join } from 'path';
-import { Array as _Array, ArrowFunc, Assign, AssignRef, Bin, Block, ByRef, Call, Case, Cast, Catch, Class, ClassConstant, Clone, Closure, Constant, ConstantStatement, Declare, DeclareDirective, Do, Echo, Encapsed, EncapsedPart, Engine, Entry, Eval, Exit, ExpressionStatement, For, Foreach, Function, If, Include, Interface, Method, Namespace, New, Node, OffsetLookup, Post, Pre, Property, PropertyLookup, PropertyStatement, RetIf, Return, Static, StaticLookup, StaticVariable, String, Switch, Throw, Trait, Try, Unary, Variable, While, Yield, YieldFrom } from 'php-parser';
+import { Array as _Array, ArrowFunc, Assign, AssignRef, Bin, Block, ByRef, Call, Case, Cast, Catch, Class, ClassConstant, Clone, Closure, Constant, ConstantStatement, Declare, DeclareDirective, Do, Echo, Encapsed, EncapsedPart, Engine, Entry, Eval, Exit, ExpressionStatement, For, Foreach, Function, If, Include, Interface, Magic, Method, Namespace, New, Node, OffsetLookup, Post, Pre, Property, PropertyLookup, PropertyStatement, RetIf, Return, Static, StaticLookup, StaticVariable, String, Switch, Throw, Trait, Try, Unary, Variable, While, Yield, YieldFrom } from 'php-parser';
 import type Builder from '..';
 import { warn } from '../helpers';
 import { BuildFile } from './file';
@@ -31,7 +31,7 @@ class PhpFile extends BuildFile {
     const addIfVar = (node: Node) => {
       // TODO: support `list`
       if (NodeIsVariable(node)) {
-        if (typeof node.name !== 'string') warn(`encountered dynamic variable access at top level (${node.loc})`);
+        if (typeof node.name !== 'string') warn('encountered dynamic variable access at top level', { ...node.loc!, file: filename });
         else globals.add(node.name);
       }
     };
@@ -47,6 +47,7 @@ class PhpFile extends BuildFile {
     let newcontents = contents;
     let offset = 0;
     // TODO: properly use once/require
+    // TODO: replace magic constants
     for (const include of includes) {
       if (!NodeIsString(include.target)) throw `Node kind \`${include.target.kind}\` not supported for includes`;
       const what = join(basename(filename), include.target.value);
@@ -153,6 +154,8 @@ function collectIncludes(node: Node | Node[] | null) {
     includes.push(node);
   } else if (NodeIsInterface(node)) {
     includes.push.apply(includes, collectIncludes(node.body));
+  } else if (NodeIsMagic(node)) {
+    warn('Magic constants are not currently altered', node.loc!);
   } else if (NodeIsMethod(node)) {
     includes.push.apply(includes, collectIncludes(node.body));
   } else if (NodeIsNamespace(node)) {
@@ -246,6 +249,7 @@ function NodeIsFunction(node: Node): node is Function { return node.kind === 'fu
 function NodeIsIf(node: Node): node is If { return node.kind === 'if'; }
 function NodeIsInclude(node: Node): node is Include { return node.kind === 'include'; }
 function NodeIsInterface(node: Node): node is Interface { return node.kind === 'interface'; }
+function NodeIsMagic(node: Node): node is Magic { return node.kind === 'magic'; }
 function NodeIsMethod(node: Node): node is Method { return node.kind === 'method'; }
 function NodeIsNamespace(node: Node): node is Namespace { return node.kind === 'namespace'; }
 function NodeIsNew(node: Node): node is New { return node.kind === 'new'; }
