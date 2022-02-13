@@ -19,13 +19,14 @@ abstract class BuildFile {
   }
 
   static generateModuleName(filename: string) {
-    const base = `__module_${createHash('md5').update(filename).digest('hex')}`;
-    return isDev() ? base + `__${basename(filename, extname(filename))}` : base;
+    const base = `__module__${createHash('md5').update(filename).digest('hex')}`;
+    return isDev() ? base + `_${basename(filename, extname(filename))}` : base;
   }
   static generateModule(filename: string, contents: string) {
     if (isDev()) contents = `// Generated from ${filename}\n${contents}`;
     return `function ${this.generateModuleName(filename)}() {
 ${contents}
+return 1;
 }`;
   }
   static generateModuleCall(filename: string, require = true, once = false, withSemi = true) {
@@ -36,16 +37,17 @@ ${contents}
     return `
 $__helpers_module_dict = array();
 function __helpers_tomodule($module) {
-  return "__module_" . md5($module)${isDev() ? ' . "__" . pathinfo($module, PATHINFO_FILENAME)' : ""};
+  return "__module__" . md5($module)${isDev() ? ' . "_" . pathinfo($module, PATHINFO_FILENAME)' : ""};
 }
 function __helpers_call($module, $require, $once) {
   global $__helpers_module_dict;
   $mod = __helpers_tomodule($module);
-  if ($once && array_key_exists($mod, $__helpers_module_dict)) return;
+  if ($once && array_key_exists($mod, $__helpers_module_dict)) return 1;
   $__helpers_module_dict[$mod] = true;
   if (function_exists($mod)) return call_user_func($mod);
   else if ($require) die("Module $module does not exist, this should not happen");
   else echo "Warning: Module $module does not exist in " . __FILE__ . " on line " . __LINE__ . "\\n";
+  return false;
 }`;
   }
 }
