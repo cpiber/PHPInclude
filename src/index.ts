@@ -17,10 +17,11 @@ class Builder extends EventEmitter {
   
   constructor(private options: import('minimist').ParsedArgs, private config?: Config) {
     super();
-    if (this.options.config) this.config = loadConfig(this.options.config);
+    if (this.options.config) this.config = loadConfig(this.options.config, this.options);
     else if (this.config) verifyConfig(this.config);
     else this.config = {};
     if (this.config.loaders) this.loaders.push.apply(this.loaders, this.config.loaders);
+    this.loaders.reverse();
     if (this.config.extensions) {
       Object.getOwnPropertyNames(this.config.extensions).forEach(ext => {
         if (this.config!.extensions![ext] === null) return delete this.extmappings[ext];

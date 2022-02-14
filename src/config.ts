@@ -6,6 +6,7 @@ interface Config {
   loaders?: BuildFileSubclass[];
   extensions?: Record<string, string>;
 }
+type Configurable = Config | ((a?: import('minimist').ParsedArgs) => Config);
 
 function isObject(obj: unknown): obj is Record<string, any> { return obj !== null && obj === Object(obj) && !Array.isArray(obj); }
 function isFileLoader(obj: unknown): obj is BuildFileSubclass {
@@ -43,4 +44,4 @@ function loadConfig(path: string, args?: import('minimist').ParsedArgs) {
   return config;
 }
 
-export { Config, verifyConfig, isFileLoader, loadConfig };
+export { Config, Configurable, verifyConfig, isFileLoader, loadConfig };

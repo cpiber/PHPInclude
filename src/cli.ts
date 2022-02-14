@@ -17,7 +17,10 @@ const options = buildOptions({
     type: 'string',
     alias: 'c',
   },
-  help: 'boolean',
+  help: {
+    type: 'boolean',
+    alias: 'h',
+  },
 });
 options.stopEarly = true;
 options.unknown = arg => {
@@ -32,6 +35,7 @@ if (args.help) {
   console.log('  <output file>:  Where to output final result. Default: dest/index.php');
   console.log('Options:');
   console.log('  --watch, -w:    Watch files instead of single build. Default: false');
+  console.log('  --config, -c:   Path to load configuration file.');
   process.exit(0);
 }
 const f = args._.shift() || 'src/index.php';
@@ -82,5 +86,5 @@ try {
     runBuild(builder, f, o);
   }
 } catch (e) {
-  error(e);
+  error(e, 'Error loading configuration file:');
 }
