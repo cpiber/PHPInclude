@@ -1,21 +1,34 @@
 import { EventEmitter } from 'events';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname, extname } from 'path';
-import { Base64File, BuildFile, PhpFile, PlainFile } from './filetypes';
+import { Config, loadConfig, verifyConfig } from './config';
+import { Base64File, BuildFile, BuildFileSubclass, PhpFile, PlainFile } from './filetypes';
 import { error, warn } from './helpers';
 
-type Sub = (new (b: Builder) => BuildFile) & { [k in keyof typeof BuildFile]: typeof BuildFile[k] };
 class Builder extends EventEmitter {
   private files: { [key: string]: BuildFile } = {};
-  private extmappings: { [key: string]: Sub } = {
+  private loaders: BuildFileSubclass[] = [ PhpFile, PlainFile, Base64File ];
+  private extmappings: { [key: string]: BuildFileSubclass } = {
     '.php': PhpFile,
     '.txt': PlainFile,
     '.js':  PlainFile,
     '.bin': Base64File,
   };
   
-  constructor(private options: import('minimist').ParsedArgs) {
+  constructor(private options: import('minimist').ParsedArgs, private config?: Config) {
     super();
+    if (this.options.config) this.config = loadConfig(this.options.config);
+    else if (this.config) verifyConfig(this.config);
+    else this.config = {};
+    if (this.config.loaders) this.loaders.push.apply(this.loaders, this.config.loaders);
+    if (this.config.extensions) {
+      Object.getOwnPropertyNames(this.config.extensions).forEach(ext => {
+        if (this.config!.extensions![ext] === null) return delete this.extmappings[ext];
+        const loader = this.loaders.find(loader => loader.getName() === this.config!.extensions![ext]);
+        if (!loader) throw `no loader named \`${this.config!.extensions![ext]}\` known for extension \`${ext}\``;
+        this.extmappings[ext] = loader;
+      });
+    }
   }
 
   async buildFile(filename: string, contents?: string | Buffer, required = true) {

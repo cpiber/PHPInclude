@@ -1,9 +1,11 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@types/is-callable': ^1.1.0
   '@types/minimist': ^1.2.2
   '@types/node': ^17.0.17
   chokidar: ^3.5.3
+  is-callable: ^1.2.4
   minimist: ^1.2.5
   minimist-options: ^4.1.0
   php-parser: ^3.0.3
@@ -13,11 +15,13 @@ specifiers:
 
 dependencies:
   chokidar: 3.5.3
+  is-callable: 1.2.4
   minimist: 1.2.5
   minimist-options: 4.1.0
   php-parser: 3.0.3
 
 devDependencies:
+  '@types/is-callable': 1.1.0
   '@types/minimist': 1.2.2
   '@types/node': 17.0.17
   rimraf: 3.0.2
@@ -25,6 +29,10 @@ devDependencies:
   typescript: 4.5.5
 
 packages:
+
+  /@types/is-callable/1.1.0:
+    resolution: {integrity: sha512-ClyLIyz53AhOu68i8xrY+EcD+hKPjz/cFUJqPMULEUKJ+iL1xRYsgV7Q0Yy6qrLSJ76sTV9lc4hbCsoLZm68xg==}
+    dev: true
 
   /@types/minimist/1.2.2:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
@@ -142,6 +150,11 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       binary-extensions: 2.2.0
+    dev: false
+
+  /is-callable/1.2.4:
+    resolution: {integrity: sha512-nsuwtxZfMX67Oryl9LCQ+upnC0Z0BgpwntpS89m1H/TLF0zNfzfLMV/9Wa/6MZsj0acpEjAO0KF1xT6ZdLl95w==}
+    engines: {node: '>= 0.4'}
     dev: false
 
   /is-extglob/2.1.1:

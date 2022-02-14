@@ -20,6 +20,7 @@ abstract class BuildFile {
   public getFilename(): string { notStrictEqual(this.filename, undefined); return this.filename!; }
   public getContents(): string { notStrictEqual(this.contents, undefined); return this.contents!; }
   public isPresent(): boolean { return !!this.includedBy.size; }
+  public static getName(): string { throw new Error('loader did not define name'); }
 
   protected setContent(filename: string, contents: string) {
     this.filename = filename;

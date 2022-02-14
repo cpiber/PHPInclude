@@ -66,6 +66,9 @@ class PhpFile extends BuildFile {
     return this.includeFiles(incpaths);
   }
 
+  public static getName(): string {
+    return "php";
+  }
 }
 
 function collectIncludes(node: Node | Node[] | null) {

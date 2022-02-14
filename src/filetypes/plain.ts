@@ -19,6 +19,10 @@ class PlainFile extends BuildFile {
     input = input.replace(/'/g, '\\\'');
     return `'${input}'`;
   }
+
+  public static getName(): string {
+    return "plaintext";
+  }
 }
 
 export { PlainFile };

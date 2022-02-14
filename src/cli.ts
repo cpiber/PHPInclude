@@ -13,6 +13,10 @@ const options = buildOptions({
     alias: 'w',
     default: false,
   },
+  config: {
+    type: 'string',
+    alias: 'c',
+  },
   help: 'boolean',
 });
 options.stopEarly = true;
@@ -36,7 +40,6 @@ if (args._.length) {
   error('Too many positional arguments!');
   process.exit(1);
 }
-const builder = new Builder(args);
 
 const timedCall = <T>(promise: Promise<T>) => {
   const start = performance.now();
@@ -45,7 +48,7 @@ const timedCall = <T>(promise: Promise<T>) => {
     .catch(reason => Promise.reject({ reason, time: performance.now() - start }));
 };
 
-export const runBuild = async (entryfile: string, outputfile: string) => {
+export const runBuild = async (builder: Builder, entryfile: string, outputfile: string) => {
   const { value: res, time } = await timedCall(builder.buildEntry(entryfile, outputfile));
   if (!res) debugLog('Finished with errors.');
   else console.log(`Build finished successfully in ${time.toFixed(2)}ms.`);
@@ -67,12 +70,17 @@ export const watchBuild = async (builder: Builder, entryfile: string, outputfile
   watcher.on('unlink', rebuild);
   builder.on('file-added', (file: string) => watcher.add(file));
   builder.on('built', (file: string) => debugLog(`Built file \`${file}\` successfully.`));
-  await runBuild(entryfile, outputfile);
+  await runBuild(builder, entryfile, outputfile);
   return watcher;
 };
 
-if (args.watch) {
-  watchBuild(builder, f, o);
-} else {
-  runBuild(f, o);
+try {
+  const builder = new Builder(args);
+  if (args.watch) {
+    watchBuild(builder, f, o);
+  } else {
+    runBuild(builder, f, o);
+  }
+} catch (e) {
+  error(e);
 }
