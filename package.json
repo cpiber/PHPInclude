@@ -1,13 +1,14 @@
 {
   "name": "phpinclude",
   "version": "1.2.1",
-  "description": "Bundler of PHP",
+  "description": "Bundler for PHP",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cpiber/PHPInclude.git"
   },
   "main": "./build/index.js",
   "scripts": {
+    "prepare": "tsc",
     "start": "tsc -w",
     "build": "tsc",
     "clean": "rimraf build/ .tsbuildinfo"
