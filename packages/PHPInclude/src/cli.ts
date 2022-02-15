@@ -3,6 +3,7 @@
 import { watch } from 'chokidar';
 import minimist from 'minimist';
 import buildOptions from 'minimist-options';
+import { resolve } from 'path';
 import { performance } from 'perf_hooks';
 import Builder from '.';
 import { debugLog, error } from './helpers';
@@ -78,13 +79,15 @@ export const watchBuild = async (builder: Builder, entryfile: string, outputfile
   return watcher;
 };
 
-try {
-  const builder = new Builder(args);
-  if (args.watch) {
-    watchBuild(builder, f, o);
-  } else {
-    runBuild(builder, f, o);
+if (resolve(process.argv[1] || '') === __filename) {
+  try {
+    const builder = new Builder(args);
+    if (args.watch) {
+      watchBuild(builder, f, o);
+    } else {
+      runBuild(builder, f, o);
+    }
+  } catch (e) {
+    error(e, 'Error loading configuration file:');
   }
-} catch (e) {
-  error(e, 'Error loading configuration file:');
 }
