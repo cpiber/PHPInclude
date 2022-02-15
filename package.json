@@ -1,6 +1,6 @@
 {
   "name": "phpinclude",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "Bundler for PHP",
   "repository": {
     "type": "git",
@@ -18,7 +18,8 @@
   },
   "files": [
     "build/",
-    "src/"
+    "src/",
+    "tsconfig.json"
   ],
   "author": "cpiber",
   "license": "ISC",

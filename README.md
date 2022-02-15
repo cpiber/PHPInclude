@@ -12,6 +12,8 @@ Resolves includes and packages files into one big file. Useful for single-file i
 
 For more information see `phpinclude --help`.
 
+Note: if you installed locally, you will probably have to prefix commands in the terminal with `npx`, i.e. `npx phpinclude ...`.
+
 ### Example
 
 - Build `src/index.php` to `dest/index.php`: `phpinclude`
