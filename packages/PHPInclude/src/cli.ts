@@ -6,6 +6,7 @@ import buildOptions from 'minimist-options';
 import { resolve } from 'path';
 import { performance } from 'perf_hooks';
 import Builder from '.';
+import { argv } from './global';
 import { debugLog, error } from './helpers';
 
 const options = buildOptions({
@@ -29,7 +30,7 @@ options.unknown = arg => {
   error(`Unkown argument \`${arg}\``);
   process.exit(1);
 };
-const args = minimist(process.argv.slice(2), options);
+const args = minimist(argv.slice(2), options);
 if (args.help) {
   console.log('phpinclude [--watch] [<input file>] [<output file>]');
   console.log('  <input file>:   File to use as entry point. Default: src/index.php');
@@ -79,7 +80,7 @@ export const watchBuild = async (builder: Builder, entryfile: string, outputfile
   return watcher;
 };
 
-if (resolve(process.argv[1] || '') === __filename) {
+if (resolve(argv[1] || '') === __filename) {
   try {
     const builder = new Builder(args);
     if (args.watch) {

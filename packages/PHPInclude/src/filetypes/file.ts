@@ -22,12 +22,20 @@ abstract class BuildFile {
   public isPresent(): boolean { return !!this.includedBy.size; }
   public static getName(): string { throw new Error('loader did not define name'); }
 
+  /**
+   * Set content and filename
+   * Clears known includes (@see includeFiles) and registers itself with cache
+   */
   protected setContent(filename: string, contents: string) {
     this.filename = filename;
     this.contents = BuildFile.generateModule(filename, contents);
     this.includes.clear();
     this.builder.registerFile(this);
   }
+  /**
+   * Try to build provided includes
+   * Keeps track of included files and registers self with other files
+   */
   protected async includeFiles(incpaths: Array<Inc>) {
     for (const inc of incpaths) {
       if (!(await this.builder.buildFileIfNotCached(inc.what, inc.require)))
@@ -43,12 +51,18 @@ abstract class BuildFile {
     return true;
   }
 
+  /**
+   * Re-register self with included files as includer (rebuild)
+   */
   public registerIncludes() {
     this.includes.forEach(inc => {
       this.builder.fileByName(inc).includedBy.add(this.getFilename());
     });
     return true;
   }
+  /**
+   * Remove self as includer from all included files recursively
+   */
   public removeAbandoned() {
     this.includes.forEach(inc => {
       const f = this.builder.fileByName(inc);
@@ -56,14 +70,23 @@ abstract class BuildFile {
       if (!f.includedBy.size) f.removeAbandoned();
     });
   }
+  /**
+   * Register special includer for entry file
+   */
   public putEntry() {
     this.includedBy.add('__entry__');
   }
 
+  /**
+   * @returns module function name based on filename
+   */
   static generateModuleName(filename: string) {
     const base = `__module__${createHash('md5').update(filename).digest('hex')}`;
     return isDev() ? base + `_${basename(filename, extname(filename))}` : base;
   }
+  /**
+   * @returns module code
+   */
   static generateModule(filename: string, contents: string) {
     if (isDev()) contents = `// Generated from ${filename}\n${contents}`;
     return `function ${this.generateModuleName(filename)}() {
@@ -71,10 +94,16 @@ ${contents}
 return 1;
 }`;
   }
+  /**
+   * @returns call to `include` helper
+   */
   static generateModuleCall(filename: string, require = true, once = false, withSemi = true) {
     const call = `__helpers_call(${JSON.stringify(filename)}, ${require}, ${once})`;
     return withSemi ? call + ';' : call;
   }
+  /**
+   * @returns helper code
+   */
   static generateModuleHelpers() {
     return `
 $__helpers_module_dict = array();

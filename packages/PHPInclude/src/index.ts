@@ -32,6 +32,10 @@ class Builder extends EventEmitter {
     }
   }
 
+  /**
+   * Fully process given file
+   * @returns success
+   */
   async buildFile(filename: string, contents?: string | Buffer, required = true) {
     try {
       if (!contents) contents = await readFile(filename);
@@ -55,19 +59,37 @@ class Builder extends EventEmitter {
       return false;
     }
   }
+  /**
+   * Build a file if it wasn't yet built (@see buildFile)
+   * Tracks includes.
+   * @returns success
+   */
   async buildFileIfNotCached(filename: string, required = true) {
     if (filename in this.files) return this.files[filename].registerIncludes();
     return this.buildFile(filename, undefined, required);
   }
+  /**
+   * Rebuild a file even if it exists (@see buildFile)
+   * Tracks new/abandoned includes.
+   * @returns success
+   */
   async rebuildFile(filename: string, contents?: string | Buffer, required = true) {
     if (filename in this.files) this.files[filename].removeAbandoned();
     return this.buildFile(filename, contents, required);
   }
 
+  /**
+   * Full build
+   * @returns success
+   */
   async buildEntry(entry: string, outfile: string) {
     if (!(await this.buildFile(entry))) return false;
     return this.rebuildWithEntry(entry, outfile);
   }
+  /**
+   * Generate output file for given entry
+   * @returns success
+   */
   async rebuildWithEntry(entry: string, outfile: string) {
     this.files[entry].putEntry();
     let outcontents = `<?php\n${BuildFile.generateModuleHelpers()}\n\n`;
@@ -83,6 +105,10 @@ class Builder extends EventEmitter {
     return true;
   }
 
+  /**
+   * Construct BuildFile via extension, or from cache if file is known
+   * @private
+   */
   constructFileFromName(filename: string) {
     if (filename in this.files) return this.files[filename];
     const ext = extname(filename);
@@ -90,10 +116,18 @@ class Builder extends EventEmitter {
     throw "filetype not supported (yet)";
   }
 
+  /**
+   * Put a file into cache
+   * @private
+   */
   registerFile(file: BuildFile) {
     this.files[file.getFilename()] = file;
     this.emit('file-added', file.getFilename(), file);
   }
+  /**
+   * Retrieve a file from cache
+   * @private
+   */
   fileByName(filename: string) {
     return this.files[filename];
   }

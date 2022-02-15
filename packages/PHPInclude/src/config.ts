@@ -19,6 +19,8 @@ function isFileLoader(obj: unknown): obj is BuildFileSubclass {
     if (!isCallable(obj['prototype'][fn])) return false;
     if (obj['prototype'][fn].length !== 0) return false;
   }
+  if (!isCallable(obj['getName'])) return false;
+  if (obj['getName'].length !== 0) return false;
   return true;
 }
 function verifyConfig(conf: unknown): asserts conf is Config {
