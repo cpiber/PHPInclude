@@ -37,5 +37,9 @@
     "minimist": "^1.2.5",
     "minimist-options": "^4.1.0",
     "php-parser": "^3.0.3"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/cpiber/PHPInclude/issues"
+  },
+  "homepage": "https://github.com/cpiber/PHPInclude#readme"
 }

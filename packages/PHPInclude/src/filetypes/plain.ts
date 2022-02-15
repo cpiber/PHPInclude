@@ -14,7 +14,7 @@ class PlainFile extends BuildFile {
    * @param input to stringify
    * @returns stringified version
    */
-  private stringify(input: string) {
+  protected stringify(input: string) {
     input = input.replace(/\\/g, '\\\\');
     input = input.replace(/'/g, '\\\'');
     return `'${input}'`;

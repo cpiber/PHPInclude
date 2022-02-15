@@ -1,6 +1,6 @@
 import isCallable from 'is-callable';
 import { resolve } from 'path';
-import { BuildFileSubclass } from './filetypes';
+import type { BuildFileSubclass } from './filetypes';
 
 interface Config {
   loaders?: BuildFileSubclass[];
@@ -11,7 +11,7 @@ type Configurable = Config | ((a?: import('minimist').ParsedArgs) => Config);
 function isObject(obj: unknown): obj is Record<string, any> { return obj !== null && obj === Object(obj) && !Array.isArray(obj); }
 function isFileLoader(obj: unknown): obj is BuildFileSubclass {
   if (!isObject(obj)) return false;
-  if (obj['length'] !== 1) return false;
+  if (obj['length'] > 1) return false;
   if (!isObject(obj['prototype'])) return false;
   if (!isCallable(obj['prototype']['process'])) return false;
   if (obj['prototype']['process'].length !== 2) return false;

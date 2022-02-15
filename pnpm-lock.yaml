@@ -29,11 +29,34 @@ importers:
       tslib: 2.3.1
       typescript: 4.5.5
 
+  packages/PHPInclude/cli:
+    specifiers: {}
+
+  packages/PHPInclude/dev:
+    specifiers: {}
+
   packages/PHPInclude/playground:
     specifiers:
       phpinclude: file:../phpinclude-2.0.0.tgz
+      phpincluderollup: workspace:^1.0.0
     devDependencies:
       phpinclude: file:packages/PHPInclude/phpinclude-2.0.0.tgz
+      phpincluderollup: link:../../PHPIncludeRollup
+
+  packages/PHPIncludeRollup:
+    specifiers:
+      phpinclude: workspace:^2.0.0
+      rimraf: ^3.0.2
+      rollup: ^2.67.2
+      tslib: ^2.3.1
+      typescript: ^4.5.5
+    dependencies:
+      rollup: 2.67.2
+    devDependencies:
+      phpinclude: link:../PHPInclude
+      rimraf: 3.0.2
+      tslib: 2.3.1
+      typescript: 4.5.5
 
 packages:
 
@@ -228,6 +251,14 @@ packages:
       glob: 7.2.0
     dev: true
 
+  /rollup/2.67.2:
+    resolution: {integrity: sha512-hoEiBWwZtf1QdK3jZIq59L0FJj4Fiv4RplCO4pvCRC86qsoFurWB4hKQIjoRf3WvJmk5UZ9b0y5ton+62fC7Tw==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: false
+
   /to-regex-range/5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
@@ -249,7 +280,7 @@ packages:
     dev: true
 
   file:packages/PHPInclude/phpinclude-2.0.0.tgz:
-    resolution: {integrity: sha512-MM8gxBOfY0/ez0S63jdxMOZu1Y3VXkQxrLSPg0jw/OWWseEtEJ2qCg4/AHwbSFpZaI/cWxEg1yYWfKHk8MGMzg==, tarball: file:packages/PHPInclude/phpinclude-2.0.0.tgz}
+    resolution: {integrity: sha512-RTCGsFgH0rW03g10QWIVOpq91PMcjtXV7QVqldB58w0V7FyRr1/j3ftLm/ZAjFuUfOHwz0ZR4HotV9QnXKLagA==, tarball: file:packages/PHPInclude/phpinclude-2.0.0.tgz}
     name: phpinclude
     version: 2.0.0
     hasBin: true
