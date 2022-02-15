@@ -42,6 +42,8 @@ These are mapped by default to the following file extensions:
 
 Loaders and mappings can be changed via [configuration files](#configuration-files).
 
+It is possible to write new loaders (see [PHPIncludeRollup](packages/PHPIncludeRollup/README.md)), though most of the time it is encouraged to have a separate build process for external files, and only include the final result via PHPInclude.
+
 ## Configuration files
 
 This application can be configured with the use of configuration files. Configuration files must be valid javascript. They may either export a configuration object, or a function that returns a configuration object.

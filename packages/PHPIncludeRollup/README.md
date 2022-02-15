@@ -14,7 +14,7 @@ const RollupFile = require('phpincluderollup').default;
 import RollupFile from 'phpincluderollup';
 
 /**
- * @type {import('../build/config').Config}
+ * @type {import('phpinclude/dev').Config}
  */
 const config = {
   loaders: [RollupFile],
