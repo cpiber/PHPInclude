@@ -8,7 +8,7 @@
   },
   "main": "./build/index.js",
   "scripts": {
-    "prepare": "tsc",
+    "prepare": "node prepare.js && tsc",
     "start": "tsc -w",
     "build": "tsc",
     "clean": "rimraf build/ .tsbuildinfo"
