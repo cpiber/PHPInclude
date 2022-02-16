@@ -80,3 +80,11 @@ module.exports = args => ({
   },
 });
 ```
+
+## Limitations
+
+Currently known limitations:
+- Global variables aren't tracked properly (#1)
+- Variable scopes aren't passed to included files (#2)
+- Namespaces aren't supported
+- Magic constants aren't updated to source file
