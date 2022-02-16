@@ -56,10 +56,10 @@ class PhpFile extends BuildFile {
       newcontents = newcontents.substring(0, include.loc!.start.offset + offset) + call + newcontents.substring(include.loc!.end.offset + offset);
       offset += newlen - oldlen;
     }
-    newcontents = newcontents.trim().replace(/^<\?(php)?[^\S\r\n]*\n?|\n?[^\S\r\n]*\?>$/, '');
+    newcontents = newcontents.trim().replace(/^\s*<\?(php)?[^\S\r\n]*\n?|\n?[^\S\r\n]*\?>\s*$/g, '');
     if (ast.children.length) {
-      if (ast.children[0].kind === 'inline' && !newcontents.match(/^\?>/)) newcontents = '?>' + newcontents;
-      if (ast.children[ast.children.length - 1].kind === 'inline' && !newcontents.match(/<\?(php)?$/)) newcontents += '<?php';
+      if (ast.children[0].kind === 'inline' && !newcontents.match(/^\s*\?>/)) newcontents = '?>' + newcontents;
+      if (ast.children[ast.children.length - 1].kind === 'inline' && !newcontents.match(/<\?(php)?\s*$/)) newcontents += '<?php';
     }
     if (globals.size) newcontents = `global ${Array.from(globals).map(s => `$${s}`).join(', ')};\n${newcontents}`;
     this.setContent(filename, newcontents);
