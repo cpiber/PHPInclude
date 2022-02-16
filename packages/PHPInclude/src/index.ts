@@ -105,6 +105,10 @@ class Builder extends EventEmitter {
     return true;
   }
 
+  public getOptions() { return this.options; }
+  public getConfig() { return this.config!; }
+  
+
   /**
    * Construct BuildFile via extension, or from cache if file is known
    * @private

@@ -3,7 +3,6 @@
 import { watch } from 'chokidar';
 import minimist from 'minimist';
 import buildOptions from 'minimist-options';
-import { resolve } from 'path';
 import { performance } from 'perf_hooks';
 import Builder from '.';
 import { argv } from './global';
@@ -80,7 +79,7 @@ export const watchBuild = async (builder: Builder, entryfile: string, outputfile
   return watcher;
 };
 
-if (resolve(argv[1] || '') === __filename) {
+if (require.main === module) {
   try {
     const builder = new Builder(args);
     if (args.watch) {
