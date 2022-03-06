@@ -8,7 +8,7 @@
   },
   "main": "./build/index.js",
   "scripts": {
-    "prepare": "node prepare.js && tsc",
+    "prepare": "tsc",
     "start": "tsc -w",
     "build": "tsc",
     "clean": "rimraf build/ .tsbuildinfo"
@@ -36,7 +36,7 @@
     "is-callable": "^1.2.4",
     "minimist": "^1.2.5",
     "minimist-options": "^4.1.0",
-    "php-parser": "^3.0.3"
+    "php-parser": "^3.1.0-beta.5"
   },
   "bugs": {
     "url": "https://github.com/cpiber/PHPInclude/issues"

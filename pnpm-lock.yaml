@@ -11,7 +11,7 @@ importers:
       is-callable: ^1.2.4
       minimist: ^1.2.5
       minimist-options: ^4.1.0
-      php-parser: ^3.0.3
+      php-parser: ^3.1.0-beta.5
       rimraf: ^3.0.2
       tslib: ^2.3.1
       typescript: ^4.5.5
@@ -20,7 +20,7 @@ importers:
       is-callable: 1.2.4
       minimist: 1.2.5
       minimist-options: 4.1.0
-      php-parser: 3.0.3
+      php-parser: 3.1.0-beta.5
     devDependencies:
       '@types/is-callable': 1.1.0
       '@types/minimist': 1.2.2
@@ -241,8 +241,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /php-parser/3.0.3:
-    resolution: {integrity: sha512-WjbrtYrwmLY9hpoKoq1+mVqJhT0dEVDZRWSpNIw2MpTw3VM/K4C6e0WR4KlU6G/XROkV7tpH4NesV2dDiPxqaw==}
+  /php-parser/3.1.0-beta.5:
+    resolution: {integrity: sha512-3F3+yThjD7wn0sMuIG5iMQqutmH+RJUAbEyPW5S/greTp5ZArkpEweylQh+do22q9UJlJT1PrLN/AwnzDUti6Q==}
     dev: false
 
   /picomatch/2.3.1:
