@@ -46,11 +46,14 @@ if (args._.length) {
   process.exit(1);
 }
 
-const timedCall = <T>(promise: Promise<T>) => {
+const timedCall = async <T>(promise: Promise<T>) => {
   const start = performance.now();
-  return promise
-    .then(value => ({ value, time: performance.now() - start }))
-    .catch(reason => Promise.reject({ reason, time: performance.now() - start }));
+  try {
+    const value = await promise;
+    return ({ value, time: performance.now() - start });
+  } catch (reason) {
+    return await Promise.reject({ reason, time: performance.now() - start });
+  }
 };
 
 export const runBuild = async (builder: Builder, entryfile: string, outputfile: string) => {
@@ -61,7 +64,7 @@ export const runBuild = async (builder: Builder, entryfile: string, outputfile: 
 
 export const watchBuild = async (builder: Builder, entryfile: string, outputfile: string) => {
   const watcher = watch([], {
-    // awaitWriteFinish: true,
+    awaitWriteFinish: true,
   });
   const rebuild = async (path: string) => {
     const { value: res, time } = await timedCall(builder.rebuildFile(path).then(res => res && builder.rebuildWithEntry(entryfile, outputfile)));
@@ -70,7 +73,7 @@ export const watchBuild = async (builder: Builder, entryfile: string, outputfile
     } else {
       console.error(`Encountered an error while building file \`${path}\``);
     }
-  }
+  };
   watcher.on('change', rebuild);
   watcher.on('unlink', rebuild);
   builder.on('file-added', (file: string) => watcher.add(file));
